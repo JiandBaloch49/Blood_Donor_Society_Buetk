@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
+import { useToast } from '../../components/ui/ToastProvider';
 
 const AdminLogin = () => {
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
+  const [credentials, setCredentials] = useState({ email: '', password: '' });
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
     
     try {
       const response = await fetch('http://localhost:5000/api/admin/login', {
@@ -22,13 +22,15 @@ const AdminLogin = () => {
       
       if (response.ok) {
         localStorage.setItem('adminToken', data.token);
+        if (data.role) localStorage.setItem('adminRole', data.role);
+        toast.success('Login Successful');
         navigate('/admin/donors');
       } else {
-        setError(data.message || 'Login failed');
+        toast.error(data.message || 'Login failed');
       }
     } catch (err) {
       console.error(err);
-      setError('Server unreachable. Please ensure backend is running.');
+      toast.error('Server unreachable. Please ensure backend is running.');
     }
   };
 
@@ -42,21 +44,15 @@ const AdminLogin = () => {
         </div>
         
         <form onSubmit={handleLogin} className="p-8 space-y-5">
-          {error && (
-            <div className="p-3 bg-red-50 text-red-700 text-sm border border-red-200 rounded-md">
-              {error}
-            </div>
-          )}
-          
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Admin Username</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Admin Email</label>
             <input 
               required 
-              type="text" 
-              value={credentials.username}
-              onChange={(e) => setCredentials({...credentials, username: e.target.value})}
+              type="email" 
+              value={credentials.email}
+              onChange={(e) => setCredentials({...credentials, email: e.target.value})}
               className="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-primary focus:border-primary outline-none" 
-              placeholder="e.g. JIAND_BALOCH" 
+              placeholder="executive@blooddonorsociety.org" 
             />
           </div>
 

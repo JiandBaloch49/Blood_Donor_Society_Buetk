@@ -10,6 +10,9 @@ import AdminLayout from './layouts/AdminLayout';
 import DonorManagement from './pages/admin/DonorManagement';
 import RequestManagement from './pages/admin/RequestManagement';
 
+import AdminManagement from './pages/admin/AdminManagement';
+import MemberManagement from './pages/admin/MemberManagement';
+
 function App() {
   return (
     <Router>
@@ -25,7 +28,9 @@ function App() {
            {/* Default redirect to donors */}
            <Route index element={<Navigate to="/admin/donors" replace />} />
            <Route path="donors" element={<DonorManagement />} />
+           <Route path="members" element={<MemberManagement />} />
            <Route path="requests" element={<RequestManagement />} />
+           <Route path="management" element={<AdminManagement />} />
         </Route>
 
         {/* Fallback 404 */}
