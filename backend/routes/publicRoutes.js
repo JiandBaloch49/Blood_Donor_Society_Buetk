@@ -67,14 +67,7 @@ router.post('/requests', async (req, res) => {
       return res.status(400).json({ message: 'Attendant phone number must be exactly 11 digits' });
     }
 
-    // Prevent duplicate spam within 10 minutes
-    const recent = await Request.findOne({
-      attendantPhone,
-      createdAt: { $gt: new Date(Date.now() - 10 * 60 * 1000) }
-    });
-    if (recent) {
-      return res.status(429).json({ message: 'A request from this number was submitted recently. Please wait.' });
-    }
+    // Removed 10-minute spam check per user request to allow multiple submissions with same number
 
     const newRequest = new Request({
       patientName, bloodGroup, hospital, urgency, attendantPhone
@@ -97,7 +90,7 @@ router.get('/requests', async (req, res) => {
     const requests = await Request.find({ 
       status: { $in: ['pending', 'verified'] } 
     })
-    .select('bloodGroup hospital urgency status createdAt') // Exclude sensitive patientName/phone
+    .select('bloodGroup hospital urgency status createdAt attendantPhone') // Include attendantPhone per user request
     .sort({ urgency: -1, createdAt: -1 })
     .limit(10);
     

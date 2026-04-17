@@ -85,7 +85,7 @@ const DonorManagement = () => {
         method: 'POST',
         body: JSON.stringify(newDonor)
       });
-      
+
       toast.success('Donor added successfully');
       setDonors([data, ...donors]);
       setIsAddModalOpen(false);
@@ -108,7 +108,7 @@ const DonorManagement = () => {
 
   const getModalProps = () => {
     if (!confirmModal.action) return {};
-    switch(confirmModal.action) {
+    switch (confirmModal.action) {
       case 'DELETE': return { title: 'Delete Donor', message: 'Are you sure you want to completely delete this donor? This cannot be undone.', type: 'danger', confirmText: 'Delete' };
       case 'TOGGLE_VERIFY': return { title: confirmModal.data.isVerified ? 'Unverify Donor' : 'Verify Donor', message: confirmModal.data.isVerified ? 'Are you sure you want to remove verification from this donor?' : 'Are you sure you want to verify this donor and make them visible for public broadcasts?', type: 'warning', confirmText: confirmModal.data.isVerified ? 'Unverify' : 'Verify' };
       case 'UPDATE_DATE': return { title: 'Update Donation Date', message: 'Are you sure you want to update the last donation date?', type: 'info', confirmText: 'Update' };
@@ -123,20 +123,20 @@ const DonorManagement = () => {
           <h2 className="text-3xl font-black text-gray-900 tracking-tight">Donor Directory</h2>
           <p className="text-gray-500 font-medium text-sm mt-1">Institutional and local donor coordination.</p>
         </div>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap items-center gap-4 w-full xl:w-auto">
-          <button 
-            onClick={() => setIsAddModalOpen(true)} 
+          <button
+            onClick={() => setIsAddModalOpen(true)}
             className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-2xl text-sm font-black tracking-widest uppercase transition-all shadow-lg active:scale-95"
           >
             <Plus className="w-5 h-5" /> Add New
           </button>
-          
+
           <div className="relative group flex-1 min-w-[200px]">
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search directory..." 
+            <input
+              type="text"
+              placeholder="Search directory..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-11 pr-4 py-3 bg-gray-50 hover:bg-white border-transparent focus:bg-white rounded-2xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:font-medium"
@@ -209,9 +209,8 @@ const DonorManagement = () => {
                   {(() => {
                     const available = computeAvailability(donor);
                     return (
-                      <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${
-                        available ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                      }`}>
+                      <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${available ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                        }`}>
                         {available ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                         {available ? 'Ready' : 'Resting'}
                       </span>
@@ -219,7 +218,7 @@ const DonorManagement = () => {
                   })()}
                 </td>
                 <td className="px-4 py-6 text-center">
-                   <button 
+                  <button
                     onClick={() => setConfirmModal({ isOpen: true, data: { id: donor._id, isVerified: donor.isVerified }, action: 'TOGGLE_VERIFY' })}
                     className={`text-[10px] font-black uppercase tracking-[0.1em] px-4 py-1.5 rounded-xl transition-all active:scale-95 ${donor.isVerified ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-orange-50 text-orange-700 border border-orange-100'}`}
                   >
@@ -227,7 +226,7 @@ const DonorManagement = () => {
                   </button>
                 </td>
                 <td className="px-8 py-6 text-right">
-                  <button 
+                  <button
                     onClick={() => setConfirmModal({ isOpen: true, data: { id: donor._id }, action: 'DELETE' })}
                     className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-xl transition-all active:scale-95"
                   >
@@ -250,7 +249,7 @@ const DonorManagement = () => {
         </table>
       </div>
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={confirmModal.isOpen}
         isLoading={confirmModal.isLoading}
         {...getModalProps()}
@@ -268,41 +267,41 @@ const DonorManagement = () => {
                 <h3 className="text-2xl font-black text-gray-900 tracking-tight">Onboard Donor</h3>
                 <p className="text-gray-400 font-medium text-sm">New database entry.</p>
               </div>
-              <button 
-                onClick={() => setIsAddModalOpen(false)} 
+              <button
+                onClick={() => setIsAddModalOpen(false)}
                 className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-900 transition-all active:scale-95"
               >
-                <X className="w-6 h-6"/>
+                <X className="w-6 h-6" />
               </button>
             </div>
-            
+
             <form onSubmit={handleAddDonor} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">First Name</label>
-                  <input required value={newDonor.firstName} onChange={e=>setNewDonor({...newDonor, firstName: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
+                  <input required value={newDonor.firstName} onChange={e => setNewDonor({ ...newDonor, firstName: e.target.value })} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Last Name</label>
-                  <input required value={newDonor.lastName} onChange={e=>setNewDonor({...newDonor, lastName: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
+                  <input required value={newDonor.lastName} onChange={e => setNewDonor({ ...newDonor, lastName: e.target.value })} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Phone Number</label>
-                <input required type="tel" pattern="[0-9]{11}" placeholder="03XXXXXXXXX" value={newDonor.phone} onChange={e=>setNewDonor({...newDonor, phone: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm font-mono focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
+                <input required type="tel" pattern="[0-9]{11}" placeholder="03XXXXXXXXX" value={newDonor.phone} onChange={e => setNewDonor({ ...newDonor, phone: e.target.value })} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm font-mono focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Blood Group</label>
-                  <select value={newDonor.bloodGroup} onChange={e=>setNewDonor({...newDonor, bloodGroup: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white font-bold cursor-pointer">
+                  <select value={newDonor.bloodGroup} onChange={e => setNewDonor({ ...newDonor, bloodGroup: e.target.value })} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white font-bold cursor-pointer">
                     {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Profile Type</label>
-                  <select value={newDonor.userType} onChange={e=>setNewDonor({...newDonor, userType: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white font-bold cursor-pointer">
+                  <select value={newDonor.userType} onChange={e => setNewDonor({ ...newDonor, userType: e.target.value })} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white font-bold cursor-pointer">
                     <option value="student">Student</option>
                     <option value="resident">Resident</option>
                   </select>
@@ -312,19 +311,19 @@ const DonorManagement = () => {
               {newDonor.userType === 'student' && (
                 <div className="animate-in fade-in slide-in-from-top duration-300">
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Roll Number</label>
-                  <input value={newDonor.rollNumber} onChange={e=>setNewDonor({...newDonor, rollNumber: e.target.value})} placeholder="e.g. 21BSCS01" className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm font-mono focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
+                  <input value={newDonor.rollNumber} onChange={e => setNewDonor({ ...newDonor, rollNumber: e.target.value })} placeholder="e.g. 22BSCS05" className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm font-mono focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
                 </div>
               )}
 
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Location Details</label>
-                <input required value={newDonor.address} onChange={e=>setNewDonor({...newDonor, address: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Hostel or Full Address" />
+                <input required value={newDonor.address} onChange={e => setNewDonor({ ...newDonor, address: e.target.value })} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Hostel or Full Address" />
               </div>
 
               <div className="pt-4">
-                <button 
-                  type="submit" 
-                  disabled={isAdding} 
+                <button
+                  type="submit"
+                  disabled={isAdding}
                   className="w-full bg-primary hover:bg-primary-hover text-white font-black py-5 rounded-[1.5rem] shadow-xl transition-all active:scale-95 disabled:opacity-50 text-sm uppercase tracking-[0.2em]"
                 >
                   {isAdding ? 'Processing...' : 'Add Donor Record'}

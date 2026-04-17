@@ -47,101 +47,85 @@ const LandingPage = () => {
 
       {activeForm === null ? (
         <>
-          {/* Hero Section with Responsive SVG Blob */}
-          <div className="relative w-full overflow-hidden" style={{ minHeight: '680px' }}>
+          {/* Unified Top Section: Navbar + Hero */}
+          <section className="relative w-full min-h-[40vh] sm:min-h-[50vh] lg:min-h-[90vh] flex flex-col">
 
-            {/* SVG Blob — Optimized for mobile coverage */}
-            <div
-              className="absolute z-0 pointer-events-none"
-              style={{
-                width: 'min(1200px, 180vw)',
-                height: 'auto',
-                aspectRatio: '960/680',
-                left: 'min(-180px, -20vw)',
-                top: '-60px'
-              }}
-            >
+            {/* SVG Background — absolute, z-0, anchors to left on desktop and center on mobile */}
+            <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
               <svg
-                viewBox="0 0 1440 1052"
-                preserveAspectRatio="xMidYMid meet"
+                viewBox="600 100 1440 1052"
+                preserveAspectRatio="xMinYMid slice"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-full h-full drop-shadow-2xl opacity-[0.98]"
+                className="w-full h-full block"
               >
-                <g filter="url(#filter1_d_1705_180)">
-                  <path
-                    d="M1381.48 890.956C1217.37 775.365 792.518 1044 515.516 1044C238.513 1044 13.9585 810.293 13.9585 522C13.9585 233.707 238.513 0 515.516 0C792.518 0 1626.57 1063.58 1381.48 890.956Z"
-                    fill="url(#paint0_linear_1705_180)"
-                  />
-                </g>
                 <defs>
-                  <filter id="filter1_d_1705_180" x="9.9585" y="0" width="1420.04" height="1052" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                  <filter id="hero_filter_shadow" x="9.9585" y="0" width="1420.04" height="1052" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
                     <feFlood floodOpacity="0" result="BackgroundImageFix" />
                     <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
                     <feOffset dy="4" />
                     <feGaussianBlur stdDeviation="2" />
-                    <feColorMatrix type="matrix" values="0 0 0 0 0.647059 0 0 0 0 0.643137 0 0 0 0 0.643137 0 0 0 1 0" />
+                    <feColorMatrix type="matrix" values="0 0 0 0 0.647 0 0 0 0 0.643 0 0 0 0 0.643 0 0 0 1 0" />
                     <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1705_180" />
                     <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1705_180" result="shape" />
                   </filter>
-                  <linearGradient id="paint0_linear_1705_180" x1="325.389" y1="82.4479" x2="850.428" y2="938.039" gradientUnits="userSpaceOnUse">
-                    <stop offset="0.221679" stopColor="#B32323" />
-                    <stop offset="0.66922" stopColor="#6A0E0B" />
+                  <linearGradient id="hero_grad_maroon" x1="325.389" y1="82.4479" x2="850.428" y2="938.039" gradientUnits="userSpaceOnUse">
+                    <stop offset="0.22" stopColor="#B32323" />
+                    <stop offset="0.67" stopColor="#6A0E0B" />
                   </linearGradient>
                 </defs>
+                <g filter="url(#hero_filter_shadow)">
+                  <path
+                    d="M1381.48 890.956C1217.37 775.365 792.518 1044 515.516 1044C238.513 1044 13.9585 810.293 13.9585 522C13.9585 233.707 238.513 0 515.516 0C792.518 0 1626.57 1063.58 1381.48 890.956Z"
+                    fill="url(#hero_grad_maroon)"
+                  />
+                </g>
               </svg>
             </div>
 
-            {/* Navbar Overlay */}
-            <div className="relative z-20 w-full">
+            {/* Navbar — Layered at z-50 */}
+            <div className="relative z-50 w-full">
               <Navbar activeForm={activeForm} setActiveForm={setActiveForm} />
             </div>
 
-            {/* Action Zone */}
-            <div className="relative z-10 flex flex-col lg:flex-row w-full h-full" style={{ minHeight: '600px' }}>
+            {/* Hero Content — Layered at z-10, takes remaining space */}
+            <div className="relative z-10 flex-grow flex flex-col lg:flex-row h-full">
 
-              {/* Desktop Headline */}
-              <div className="hidden lg:flex absolute inset-y-0 left-0 items-center justify-center text-center pointer-events-none w-[42%]">
-                <h1 className="text-5xl xl:text-6xl font-black leading-tight tracking-tight text-white drop-shadow-2xl animate-in slide-in-from-left duration-700">
-                  <span className="block">Give Blood</span>
-                  <span className="block mt-3">Give Life</span>
-                </h1>
-              </div>
-
-              {/* Mobile Headline — Visually centered to the maroon mass, not the screen edge */}
-              <div className="lg:hidden w-full flex items-center justify-center px-6 pt-24 pb-12 sm:bg-transparent">
-                <div className="text-white text-center drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] pr-8 sm:pr-0">
-                  <h1 className="text-4xl sm:text-5xl font-black leading-tight animate-in zoom-in duration-500">
+              {/* Left — Headline text, visually contained by SVG shape */}
+              <div className="flex-1 flex items-center justify-center lg:justify-start px-8 sm:px-12 lg:px-20 text-center lg:text-left animate-in slide-in-from-left duration-700">
+                <div>
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.1] tracking-tight text-white drop-shadow-lg">
                     <span className="block">Give Blood</span>
-                    <span className="block mt-2">Give Life</span>
+                    <span className="block mt-1 sm:mt-2">Give Life</span>
                   </h1>
+                  <p className="mt-4 text-sm sm:text-base lg:text-lg text-white/80 font-medium max-w-md leading-relaxed">
+                    Join BUETK's elite coordination network. Real-time intelligence bridging donors and emergency needs.
+                  </p>
                 </div>
               </div>
 
-              <div className="hidden lg:block lg:w-1/2" />
-
-              {/* CTAs */}
-              <div className="w-full lg:w-1/2 flex items-center justify-center p-6 pb-20 lg:p-12">
-                <div className="flex flex-col gap-6 w-full max-w-sm animate-in fade-in slide-in-from-bottom duration-1000">
+              {/* Right — CTA Buttons */}
+              <div className="flex-1 flex items-center justify-center lg:justify-start px-8 sm:px-12 lg:px-20 pb-12 lg:pb-0 animate-in fade-in slide-in-from-right duration-700">
+                <div className="flex flex-col gap-5 w-full max-w-sm lg:max-w-xs">
                   <button
-                    aria-label="Submit Emergency Blood Request"
                     onClick={() => setActiveForm('emergency')}
-                    className="w-full bg-primary hover:bg-primary-hover text-white text-xl font-black py-5 rounded-2xl shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ring-offset-2 focus:ring-2 focus:ring-primary h-[70px]"
+                    className="w-full lg:w-auto py-5 lg:px-10 bg-primary hover:bg-primary-hover text-white text-lg font-black rounded-2xl shadow-2xl shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
-                    <Droplet className="w-6 h-6 fill-white/20" />
+                    <Droplet className="w-5 h-5 fill-white/20" />
                     Emergency Request
                   </button>
                   <button
-                    aria-label="Register as a Blood Donor"
                     onClick={() => setActiveForm('register')}
-                    className="w-full bg-white text-primary hover:bg-gray-50 text-xl font-black py-5 rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center ring-offset-2 focus:ring-2 focus:ring-primary h-[70px]"
+                    className="w-full lg:w-auto py-5 lg:px-10 bg-white text-primary border-2 border-primary/10 hover:border-primary/30 hover:bg-primary hover:text-white text-lg font-black rounded-2xl shadow-xl transition-all active:scale-95"
                   >
-                    Register as Donor
+                    Become a Donor
                   </button>
                 </div>
               </div>
+
             </div>
-          </div>
+
+          </section>
 
           {/* Members Directory */}
           <section className="w-full bg-white py-24 px-4 sm:px-8 border-t border-gray-50">
@@ -256,52 +240,52 @@ const LandingPage = () => {
                   <p className="text-green-600 font-black uppercase tracking-widest text-xs">No active critical emergencies</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {requests.map(req => (
                     <div
                       key={req._id}
-                      className={`bg-white rounded-[2.5rem] p-10 border-2 transition-all hover:shadow-2xl hover:-translate-y-2 flex flex-col group ${req.urgency === 'critical' ? 'border-primary shadow-primary/5' :
-                          req.urgency === 'high' ? 'border-orange-500 shadow-orange-500/5' : 'border-gray-50'
+                      className={`bg-white rounded-[2rem] p-6 border-2 transition-all hover:shadow-2xl hover:-translate-y-1 flex flex-col group ${req.urgency === 'critical' ? 'border-primary shadow-primary/5' :
+                        req.urgency === 'high' ? 'border-orange-500 shadow-orange-500/5' : 'border-gray-50'
                         }`}
                     >
-                      <div className="flex items-start justify-between mb-8">
+                      <div className="flex items-start justify-between mb-6">
                         <div className="flex flex-col">
-                          <span className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 px-3 py-1 rounded-full w-fit ${req.urgency === 'critical' ? 'bg-primary text-white animate-pulse' :
-                              req.urgency === 'high' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-500'
+                          <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1.5 px-2.5 py-1 rounded-full w-fit ${req.urgency === 'critical' ? 'bg-primary text-white animate-pulse' :
+                            req.urgency === 'high' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-500'
                             }`}>
                             {req.urgency}
                           </span>
-                          <h3 className="text-2xl font-black text-gray-900 tracking-tight mt-3">{req.displayName}</h3>
+                          <h3 className="text-lg font-black text-gray-900 tracking-tight mt-1 truncate max-w-[150px]">{req.displayName}</h3>
                         </div>
-                        <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-2xl font-black tracking-tighter ${req.urgency === 'critical' ? 'bg-primary text-white shadow-xl shadow-primary/20' : 'bg-gray-50 text-gray-900 border border-gray-100'
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black tracking-tighter shrink-0 ${req.urgency === 'critical' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-gray-50 text-gray-900 border border-gray-100'
                           }`}>
                           {req.bloodGroup}
                         </div>
                       </div>
 
-                      <div className="space-y-4 mb-10">
-                        <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                          <Building2 className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                          <Building2 className="w-4 h-4 text-gray-300 mt-0.5" />
                           <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 italic">Location</p>
-                            <p className="text-sm font-black text-gray-800 leading-tight">{req.hospital}</p>
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Location</p>
+                            <p className="text-xs font-bold text-gray-700 leading-tight line-clamp-1">{req.hospital}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                          <Clock className="w-5 h-5 text-gray-400" />
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                          <Clock className="w-4 h-4 text-gray-300" />
                           <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 italic">Broadcast Time</p>
-                            <p className="text-sm font-black text-gray-800 leading-tight">{new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Today</p>
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Time</p>
+                            <p className="text-xs font-bold text-gray-700 leading-tight">{new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                           </div>
                         </div>
+                        <a href={`tel:${req.attendantPhone}`} className="flex items-center gap-3 p-3 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/10 transition-colors group/phone">
+                          <Phone className="w-4 h-4 text-primary" />
+                          <div>
+                            <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest mb-0.5">Contact Line</p>
+                            <p className="text-sm font-black text-primary font-mono tracking-tighter">{req.attendantPhone}</p>
+                          </div>
+                        </a>
                       </div>
-
-                      <button
-                        onClick={() => setActiveForm('emergency')}
-                        className="w-full mt-auto py-5 bg-gray-900 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-primary transition-all flex items-center justify-center gap-2 group-hover:shadow-xl group-hover:shadow-primary/20"
-                      >
-                        I Can Help <ChevronRight className="w-4 h-4" />
-                      </button>
                     </div>
                   ))}
                 </div>
@@ -309,7 +293,7 @@ const LandingPage = () => {
             </div>
           </section>
 
-          <Footer />
+          <Footer setActiveForm={setActiveForm} />
         </>
       ) : (
         /* Form View */

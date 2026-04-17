@@ -38,7 +38,7 @@ const AdminManagement = () => {
         method: 'POST',
         body: JSON.stringify(newAdmin)
       });
-      
+
       toast.success(data.message);
       setAdmins([data.admin, ...admins]);
       setNewAdmin({ email: '', password: '', role: 'ADMIN' });
@@ -55,7 +55,7 @@ const AdminManagement = () => {
       const data = await fetchWithRetry(`${API_BASE}/api/admin/${confirmModal.adminId}`, {
         method: 'DELETE'
       });
-      
+
       toast.success(data.message);
       setAdmins(admins.filter(a => a._id !== confirmModal.adminId));
     } catch (err) {
@@ -78,7 +78,7 @@ const AdminManagement = () => {
       </div>
 
       <div className="p-8 grid grid-cols-1 lg:grid-cols-12 gap-12">
-        
+
         {/* Create Form */}
         <div className="lg:col-span-5 xl:col-span-4 group">
           <div className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100 transition-all group-hover:bg-white group-hover:shadow-2xl group-hover:shadow-primary/5">
@@ -90,29 +90,29 @@ const AdminManagement = () => {
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Network Email</label>
                 <div className="relative">
                   <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
-                  <input required type="email" value={newAdmin.email} onChange={e => setNewAdmin({...newAdmin, email: e.target.value})} className="w-full bg-white border-transparent rounded-2xl pl-12 pr-4 py-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm" placeholder="admin@society.org" />
+                  <input required type="email" value={newAdmin.email} onChange={e => setNewAdmin({ ...newAdmin, email: e.target.value })} className="w-full bg-white border-transparent rounded-2xl pl-12 pr-4 py-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm" placeholder="22BSCS05@gmail.com" />
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Secure Passphrase</label>
                 <div className="relative">
                   <Lock className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
-                  <input required type="password" value={newAdmin.password} onChange={e => setNewAdmin({...newAdmin, password: e.target.value})} className="w-full bg-white border-transparent rounded-2xl pl-12 pr-4 py-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm" placeholder="••••••••" />
+                  <input required type="password" value={newAdmin.password} onChange={e => setNewAdmin({ ...newAdmin, password: e.target.value })} className="w-full bg-white border-transparent rounded-2xl pl-12 pr-4 py-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm" placeholder="••••••••" />
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Clearance Level</label>
                 <div className="relative">
                   <Key className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
-                  <select value={newAdmin.role} onChange={e => setNewAdmin({...newAdmin, role: e.target.value})} className="w-full bg-white border-transparent rounded-2xl pl-12 pr-10 py-4 text-sm font-black outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm cursor-pointer appearance-none">
+                  <select value={newAdmin.role} onChange={e => setNewAdmin({ ...newAdmin, role: e.target.value })} className="w-full bg-white border-transparent rounded-2xl pl-12 pr-10 py-4 text-sm font-black outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm cursor-pointer appearance-none">
                     <option value="ADMIN">STANDARD ADMIN</option>
                     <option value="MASTER_ADMIN">MASTER ADMIN</option>
                   </select>
                 </div>
               </div>
-              <button 
-                disabled={isCreating} 
-                type="submit" 
+              <button
+                disabled={isCreating}
+                type="submit"
                 className="w-full bg-primary hover:bg-primary-hover text-white py-5 rounded-[1.5rem] font-black transition-all shadow-xl shadow-primary/20 active:scale-95 disabled:opacity-50 text-xs uppercase tracking-[0.2em]"
               >
                 {isCreating ? 'Provisioning...' : 'Provision Account'}
@@ -139,18 +139,17 @@ const AdminManagement = () => {
                 <tr key={admin._id} className="hover:bg-primary/5 transition-all group/row">
                   <td className="px-6 py-6">
                     <div className="flex items-center gap-3">
-                       <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center">
-                          <UserCog className="w-5 h-5 text-gray-300" />
-                       </div>
-                       <div className="font-bold text-gray-900 group-hover/row:text-primary transition-colors">{admin.email}</div>
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center">
+                        <UserCog className="w-5 h-5 text-gray-300" />
+                      </div>
+                      <div className="font-bold text-gray-900 group-hover/row:text-primary transition-colors">{admin.email}</div>
                     </div>
                   </td>
                   <td className="px-4 py-6">
-                    <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border ${
-                      admin.role === 'MASTER_ADMIN' 
-                      ? 'bg-purple-50 text-purple-700 border-purple-100' 
-                      : 'bg-blue-50 text-blue-700 border-blue-100'
-                    }`}>
+                    <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border ${admin.role === 'MASTER_ADMIN'
+                        ? 'bg-purple-50 text-purple-700 border-purple-100'
+                        : 'bg-blue-50 text-blue-700 border-blue-100'
+                      }`}>
                       {admin.role === 'MASTER_ADMIN' ? <Shield className="w-3 h-3" /> : null}
                       {admin.role.replace('_', ' ')}
                     </span>
@@ -159,7 +158,7 @@ const AdminManagement = () => {
                     {new Date(admin.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-6 text-right flex justify-end gap-2">
-                    <button 
+                    <button
                       onClick={() => setConfirmModal({ isOpen: true, adminId: admin._id })}
                       className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-xl transition-all active:scale-95"
                       title="Deactivate Admin"
@@ -172,10 +171,10 @@ const AdminManagement = () => {
               {!isLoading && admins.length === 0 && (
                 <tr>
                   <td colSpan="4" className="p-20 text-center">
-                     <div className="flex flex-col items-center gap-4 opacity-20">
-                        <Lock className="w-14 h-14" />
-                        <p className="font-black uppercase tracking-widest text-xs">Access Ledger Empty</p>
-                     </div>
+                    <div className="flex flex-col items-center gap-4 opacity-20">
+                      <Lock className="w-14 h-14" />
+                      <p className="font-black uppercase tracking-widest text-xs">Access Ledger Empty</p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -184,7 +183,7 @@ const AdminManagement = () => {
         </div>
       </div>
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={confirmModal.isOpen}
         title="Revoke Access"
         message="Are you sure you want to permanently revoke this administrator's access to the secure network? This action cannot be undone."

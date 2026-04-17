@@ -31,13 +31,13 @@ const AdminLayout = () => {
   };
 
   const navLinks = [
-    { name: 'Donors Directory', path: '/admin/donors', icon: Users },
-    { name: 'Society Members', path: '/admin/members', icon: UserCheck },
-    { name: 'Emergency Requests', path: '/admin/requests', icon: AlertCircle },
+    { name: 'Donors', path: '/admin/donors', icon: Users },
+    { name: 'Members', path: '/admin/members', icon: UserCheck },
+    { name: 'Requests', path: '/admin/requests', icon: AlertCircle },
   ];
 
   if (role === 'MASTER_ADMIN') {
-    navLinks.push({ name: 'Admin Management', path: '/admin/management', icon: ShieldCheck });
+    navLinks.push({ name: 'Admins', path: '/admin/management', icon: ShieldCheck });
   }
 
   return (
@@ -58,7 +58,7 @@ const AdminLayout = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center">
-              <div className="flex space-x-2 mr-4">
+              <div className="flex space-x-1 mr-2">
                 {navLinks.map((link) => {
                   const Icon = link.icon;
                   const isActive = location.pathname.includes(link.path);
@@ -66,11 +66,11 @@ const AdminLayout = () => {
                     <Link
                       key={link.name}
                       to={link.path}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        isActive ? 'bg-white text-primary shadow-sm ring-1 ring-black/5' : 'text-white/80 hover:bg-white/10 hover:text-white'
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        isActive ? 'bg-white text-primary shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white'
                       }`}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-3.5 h-3.5" />
                       {link.name}
                     </Link>
                   );
@@ -78,15 +78,15 @@ const AdminLayout = () => {
               </div>
               
               {/* Divider */}
-              <div className="h-8 w-px bg-white/20 mx-2"></div>
+              <div className="h-6 w-px bg-white/20 mx-1"></div>
 
               {/* Desktop Logout Button */}
               <button 
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors ml-2"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white/80 hover:bg-white/10 hover:text-white transition-colors ml-1"
                 title="Sign Out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
                 Sign Out
               </button>
             </div>

@@ -94,13 +94,13 @@ const RequestManagement = () => {
              <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Syncing Ledgers...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {requests.map(request => (
               <div 
                 key={request._id} 
-                className={`bg-white rounded-3xl shadow-sm border-2 transition-all group relative overflow-hidden flex flex-col ${
+                className={`bg-white rounded-2xl shadow-sm border-2 transition-all group relative overflow-hidden flex flex-col ${
                   request.status === 'pending' 
-                  ? 'border-primary/20 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10' 
+                  ? 'border-primary/20 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5' 
                   : 'border-gray-100 opacity-80'
                 }`}
               >
@@ -108,84 +108,83 @@ const RequestManagement = () => {
                 {/* Delete Trigger */}
                 <button 
                   onClick={() => setConfirmModal({ isOpen: true, data: { id: request._id }, action: 'DELETE' })}
-                  className="absolute top-4 right-4 p-2.5 bg-gray-50 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded-xl transition-all active:scale-95 z-10"
+                  className="absolute top-3 right-3 p-2 bg-gray-50 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded-lg transition-all active:scale-95 z-10"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
 
-                <div className="p-7 flex-1 flex flex-col">
+                <div className="p-5 flex-1 flex flex-col">
                   {/* Header */}
-                  <div className="flex justify-between items-start mb-6 pr-10">
+                  <div className="flex justify-between items-start mb-4 pr-8">
                     <div>
-                      <h3 className="font-black text-xl text-gray-900 tracking-tight group-hover:text-primary transition-colors">{request.patientName}</h3>
-                      <div className="flex items-center gap-2 mt-1 text-gray-400 font-bold uppercase text-[10px] tracking-widest">
-                        <Calendar className="w-3 h-3" />
+                      <h3 className="font-black text-lg text-gray-900 tracking-tight group-hover:text-primary transition-colors truncate max-w-[120px]">{request.patientName}</h3>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-gray-400 font-bold uppercase text-[9px] tracking-widest">
+                        <Calendar className="w-2.5 h-2.5" />
                         {new Date(request.createdAt).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="bg-red-50 text-primary font-black px-4 py-2 rounded-2xl border border-red-100 text-lg shadow-sm">
+                    <div className="bg-red-50 text-primary font-black px-3 py-1.5 rounded-xl border border-red-100 text-base shadow-sm">
                       {request.bloodGroup}
                     </div>
                   </div>
 
                   {/* Details */}
-                  <div className="space-y-4 mb-8 flex-1">
-                    <div className="flex gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
-                        <Activity className="w-5 h-5 text-gray-400" />
+                  <div className="space-y-3 mb-6 flex-1 text-xs">
+                    <div className="flex gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                        <Activity className="w-4 h-4 text-gray-400" />
                       </div>
-                      <div>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Hospital Base</p>
-                        <p className="text-sm font-bold text-gray-800">{request.hospital}</p>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Hospital</p>
+                        <p className="font-bold text-gray-800 truncate">{request.hospital}</p>
                       </div>
                     </div>
 
-                    <div className="flex gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
-                        <Phone className="w-5 h-5 text-gray-400" />
+                    <div className="flex gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4 text-gray-400" />
                       </div>
-                      <a href={`tel:${request.phone || request.attendantPhone}`} className="hover:text-primary transition-colors">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Communication</p>
-                        <p className="text-sm font-black text-gray-800 font-mono tracking-tighter">{request.phone || request.attendantPhone}</p>
+                      <a href={`tel:${request.phone || request.attendantPhone}`} className="hover:text-primary transition-colors min-w-0">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Contact</p>
+                        <p className="font-black text-gray-800 font-mono tracking-tighter truncate">{request.phone || request.attendantPhone}</p>
                       </a>
                     </div>
 
-                    <div className="flex items-center justify-between bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
-                      <span className="text-xs font-bold text-gray-500">Triage Level</span>
+                    <div className="flex items-center justify-between bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                      <span className="text-[10px] font-bold text-gray-500">Urgency</span>
                       {getUrgencyBadge(request.urgency)}
                     </div>
                   </div>
 
                   {/* Action Bar */}
-                  <div className="mt-auto pt-4 flex gap-3">
+                  <div className="mt-auto pt-2 flex gap-2">
                     {request.status === 'pending' && (
                       <button 
                         onClick={() => setConfirmModal({ isOpen: true, data: { id: request._id }, action: 'VERIFY' })}
-                        className="flex-1 bg-primary hover:bg-primary-hover text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2"
+                        className="flex-1 bg-primary hover:bg-primary-hover text-white font-black py-3 rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center justify-center gap-1.5"
                       >
-                        <Radio className="w-4 h-4 animate-pulse" />
-                        Verify & Broadcast
+                        <Radio className="w-3 h-3 animate-pulse" />
+                        Broadcast
                       </button>
                     )}
                     
                     {request.status === 'verified' && (
                       <button 
                         onClick={() => setConfirmModal({ isOpen: true, data: { id: request._id }, action: 'FULFILL' })}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-xl shadow-green-500/20 active:scale-95 flex items-center justify-center gap-2"
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-3 rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-green-500/20 active:scale-95 flex items-center justify-center gap-1.5"
                       >
-                        <CheckCircle2 className="w-4 h-4" />
-                        Mark Fulfilled
+                        <CheckCircle2 className="w-3 h-3" />
+                        Fulfill
                       </button>
                     )}
 
                     {request.status === 'fulfilled' && (
-                      <div className="flex-1 bg-gray-100 text-gray-400 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest text-center border border-gray-200">
-                        Mission Accomplished
+                      <div className="flex-1 bg-gray-100 text-gray-400 font-black py-3 rounded-xl text-[9px] uppercase tracking-widest text-center border border-gray-200">
+                        Done
                       </div>
                     )}
                   </div>
                 </div>
-
               </div>
             ))}
 
