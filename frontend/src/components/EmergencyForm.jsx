@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useToast } from './ui/ToastProvider';
+import { fetchWithRetry, API_BASE } from '../api';
+import { Phone, User, MapPin, Activity, Radio, CheckCircle2, RefreshCcw } from 'lucide-react';
 
 const EmergencyForm = () => {
   const [formData, setFormData] = useState({
@@ -22,21 +24,15 @@ const EmergencyForm = () => {
     }
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:5000/api/public/requests', {
+      const data = await fetchWithRetry(`${API_BASE}/api/public/requests`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      const data = await response.json();
-      if (response.ok) {
-        setSubmitted(true);
-        toast.success(data.message || 'Request submitted successfully');
-      } else {
-        toast.error(data.message || 'Failed to submit request');
-      }
+      
+      setSubmitted(true);
+      toast.success(data.message || 'Mission critical request dispatched');
     } catch (err) {
-      console.error('Failed to submit emergency request:', err);
-      toast.error('Network error. Please try again later.');
+      toast.error(err.message || 'System interruption. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -48,87 +44,134 @@ const EmergencyForm = () => {
 
   if (submitted) {
     return (
-      <div className="p-8 text-center bg-primary/10 border border-primary/20 rounded-md">
-        <h3 className="text-xl font-semibold text-primary mb-2">Emergency Request Received</h3>
-        <p className="text-gray-700">An admin has been alerted and will coordinate with you via phone immediately.</p>
+      <div className="w-full max-w-2xl mx-auto p-12 text-center bg-white rounded-[2.5rem] shadow-2xl border border-green-100 animate-in zoom-in duration-500">
+        <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-8">
+           <CheckCircle2 className="w-10 h-10 text-green-500" />
+        </div>
+        <h3 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Dispatch Confirmed</h3>
+        <p className="text-gray-500 font-medium leading-relaxed max-w-md mx-auto">
+          Your emergency request has been broadcasted to the society network. An administrator will initiate contact via <span className="text-gray-900 font-black underline decoration-green-500">{formData.attendantPhone}</span> immediately.
+        </p>
         <button 
           onClick={() => {
             setSubmitted(false);
             setFormData({...formData, patientName: '', attendantPhone: '', hospital: ''});
           }}
-          className="mt-6 text-sm text-gray-500 underline hover:text-gray-700"
+          className="mt-10 flex items-center gap-2 mx-auto text-xs font-black uppercase tracking-[0.2em] text-gray-400 hover:text-primary transition-colors active:scale-95 px-6 py-3 rounded-2xl hover:bg-gray-50"
         >
-          Submit another request
+          <RefreshCcw className="w-4 h-4" />
+          New Dispatch Request
         </button>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] overflow-hidden border-t-4 border-primary">
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-2xl font-bold text-gray-900">Emergency Blood Request</h2>
-        <p className="text-sm text-gray-500 mt-1">Please fill this out accurately for urgent dispatch.</p>
+    <div className="w-full max-w-2xl mx-auto bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom duration-700 border border-gray-100 p-1">
+      <div className="bg-primary p-10 text-white relative overflow-hidden rounded-[2.2rem]">
+         <div className="absolute top-0 right-0 p-12 opacity-10">
+            <Radio className="w-32 h-32 animate-pulse" />
+         </div>
+         <h2 className="text-3xl font-black tracking-tight mb-2">Emergency Hub</h2>
+         <p className="text-white/80 font-medium text-sm">Critical life-saving coordination network.</p>
       </div>
       
-      <form onSubmit={handleSubmit} className="p-8">
-        <div className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Patient Name <span className="text-red-500">*</span></label>
-            <input required type="text" name="patientName" value={formData.patientName} onChange={handleChange} className="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-primary focus:border-primary outline-none" placeholder="Full Name" />
+      <form onSubmit={handleSubmit} className="p-10 space-y-8">
+        <div className="grid grid-cols-1 gap-8">
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Patient Identity</label>
+            <div className="relative group">
+               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors" />
+               <input required type="text" name="patientName" value={formData.patientName} onChange={handleChange} className="w-full bg-gray-50 border-transparent rounded-2xl pl-12 pr-4 py-4 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none font-bold" placeholder="Full Legal Name" />
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group Required <span className="text-red-500">*</span></label>
-              <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-primary focus:border-primary outline-none bg-white">
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-              </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1 text-center md:text-left">Blood Type Required</label>
+              <div className="grid grid-cols-4 gap-2">
+                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(group => (
+                  <button
+                    key={group}
+                    type="button"
+                    onClick={() => setFormData({...formData, bloodGroup: group})}
+                    className={`py-3 rounded-xl text-xs font-black transition-all active:scale-90 border-2 ${
+                      formData.bloodGroup === group 
+                      ? 'bg-primary border-primary text-white shadow-lg shadow-primary/25' 
+                      : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
+                    }`}
+                  >
+                    {group}
+                  </button>
+                ))}
+              </div>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Attendant Phone <span className="text-red-500">*</span></label>
-              <input required type="tel" pattern="[0-9]{11}" name="attendantPhone" value={formData.attendantPhone} onChange={handleChange} title="Phone number must be exactly 11 digits" className="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-primary focus:border-primary outline-none" placeholder="03XXXXXXXXX" />
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Active Contact</label>
+              <div className="relative group">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors" />
+                <input required type="tel" pattern="[0-9]{11}" name="attendantPhone" value={formData.attendantPhone} onChange={handleChange} className="w-full bg-gray-50 border-transparent rounded-2xl pl-12 pr-4 py-4 text-sm font-mono focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="03XXXXXXXXX" />
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Hospital / Location <span className="text-red-500">*</span></label>
-            <input required type="text" name="hospital" value={formData.hospital} onChange={handleChange} className="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-primary focus:border-primary outline-none" placeholder="E.g. Civil Hospital, Khuzdar" />
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Institutional Location</label>
+            <div className="relative group">
+               <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors" />
+               <input required type="text" name="hospital" value={formData.hospital} onChange={handleChange} className="w-full bg-gray-50 border-transparent rounded-2xl pl-12 pr-4 py-4 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none font-bold" placeholder="e.g. DHQ Hospital, Khuzdar" />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Urgency Level <span className="text-red-500">*</span></label>
-            <select name="urgency" value={formData.urgency} onChange={handleChange} className="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-primary focus:border-primary outline-none bg-white">
-              <option value="high">High (Within 24 hours)</option>
-              <option value="critical">Critical (Immediate)</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Triage Urgency</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  {id: 'low', label: 'Monitor'},
+                  {id: 'medium', label: 'Urgent'},
+                  {id: 'high', label: 'High Priority'},
+                  {id: 'critical', label: 'CRITICAL'}
+                ].map(u => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => setFormData({...formData, urgency: u.id})}
+                    className={`py-3 rounded-xl text-[9px] font-black uppercase tracking-tighter transition-all active:scale-90 border-2 ${
+                      formData.urgency === u.id 
+                      ? 'bg-gray-900 border-gray-900 text-white shadow-xl' 
+                      : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
+                    }`}
+                  >
+                    {u.label}
+                  </button>
+                ))}
+              </div>
           </div>
 
-          <div className="pt-4">
-            <button disabled={isSubmitting} type="submit" className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-4 rounded-md transition-colors shadow-sm disabled:opacity-70">
+          <div className="pt-6">
+            <button 
+              disabled={isSubmitting} 
+              type="submit" 
+              className="w-full relative bg-primary hover:bg-primary-hover text-white font-black py-6 rounded-[1.8rem] transition-all shadow-2xl shadow-primary/30 active:scale-95 disabled:opacity-70 text-sm uppercase tracking-[0.3em]"
+            >
               {isSubmitting ? (
-                <div className="flex items-center gap-2">
-                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                   Dispatching...
+                <div className="flex items-center justify-center gap-3">
+                   <Activity className="animate-spin h-5 w-5" />
+                   Initiating Broadcast...
                 </div>
               ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  Dispatch Request
-                </>
+                <div className="flex items-center justify-center gap-3">
+                  <Radio className="w-5 h-5 animate-pulse" />
+                  Dispatch Emergency Request
+                </div>
               )}
             </button>
           </div>
+          
+          <p className="text-center text-[10px] font-bold text-gray-300 uppercase tracking-widest px-4">
+             Your IP identity is logged for security. False reporting is punishable by law.
+          </p>
         </div>
       </form>
     </div>

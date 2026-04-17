@@ -33,4 +33,7 @@ const requestSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+requestSchema.index({ status: 1 });
+requestSchema.index({ bloodGroup: 1 });
+
 module.exports = mongoose.model('Request', requestSchema);

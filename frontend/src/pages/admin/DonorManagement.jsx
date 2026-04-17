@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Search, Edit2, CheckCircle, XCircle, Trash2, Plus, X } from 'lucide-react';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useToast } from '../../components/ui/ToastProvider';
+import { fetchWithRetry, API_BASE } from '../../api';
+import { TableRowSkeleton } from '../../components/ui/Skeleton';
 
 const DonorManagement = () => {
   const [donors, setDonors] = useState([]);
@@ -27,17 +29,10 @@ const DonorManagement = () => {
   const fetchDonors = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/admin/donors', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setDonors(data);
-      } else {
-        toast.error('Failed to fetch donors');
-      }
+      const data = await fetchWithRetry(`${API_BASE}/api/admin/donors`);
+      setDonors(data);
     } catch (err) {
-      toast.error('Backend unreachable');
+      toast.error(err.message || 'Failed to fetch donors');
     } finally {
       setIsLoading(false);
     }
@@ -52,13 +47,11 @@ const DonorManagement = () => {
     setConfirmModal({ ...confirmModal, isLoading: true });
 
     try {
-      let url = `http://localhost:5000/api/admin/donors/${data.id}`;
+      let url = `${API_BASE}/api/admin/donors/${data.id}`;
       let method = 'PUT';
       let bodyData = null;
 
-      if (action === 'TOGGLE_AVAILABILITY') {
-        bodyData = { isAvailable: !data.isAvailable };
-      } else if (action === 'TOGGLE_VERIFY') {
+      if (action === 'TOGGLE_VERIFY') {
         bodyData = { isVerified: !data.isVerified };
       } else if (action === 'DELETE') {
         method = 'DELETE';
@@ -66,27 +59,19 @@ const DonorManagement = () => {
         bodyData = { lastDonated: data.lastDonated };
       }
 
-      const options = {
+      const resData = await fetchWithRetry(url, {
         method,
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}`, 'Content-Type': 'application/json' }
-      };
-      if (bodyData) options.body = JSON.stringify(bodyData);
+        body: bodyData ? JSON.stringify(bodyData) : undefined
+      });
 
-      const res = await fetch(url, options);
-      const resData = await res.json();
-
-      if (res.ok) {
-        toast.success(action === 'DELETE' ? 'Donor deleted successfully' : 'Donor updated successfully');
-        if (action === 'DELETE') {
-          setDonors(donors.filter(d => d._id !== data.id));
-        } else {
-          setDonors(donors.map(d => d._id === data.id ? resData : d));
-        }
+      toast.success(action === 'DELETE' ? 'Donor deleted successfully' : 'Donor updated successfully');
+      if (action === 'DELETE') {
+        setDonors(donors.filter(d => d._id !== data.id));
       } else {
-        toast.error(resData.message || 'Action failed');
+        setDonors(donors.map(d => d._id === data.id ? resData : d));
       }
     } catch (err) {
-      toast.error('Server error');
+      toast.error(err.message || 'Action failed');
     } finally {
       setConfirmModal({ isOpen: false, data: null, action: null });
     }
@@ -96,25 +81,17 @@ const DonorManagement = () => {
     e.preventDefault();
     setIsAdding(true);
     try {
-      const res = await fetch('http://localhost:5000/api/admin/donors', {
+      const data = await fetchWithRetry(`${API_BASE}/api/admin/donors`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        },
         body: JSON.stringify(newDonor)
       });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success('Donor added successfully');
-        setDonors([data, ...donors]);
-        setIsAddModalOpen(false);
-        setNewDonor({ firstName: '', lastName: '', phone: '', bloodGroup: 'A+', userType: 'student', rollNumber: '', address: '' });
-      } else {
-        toast.error(data.message || 'Failed to add donor');
-      }
+      
+      toast.success('Donor added successfully');
+      setDonors([data, ...donors]);
+      setIsAddModalOpen(false);
+      setNewDonor({ firstName: '', lastName: '', phone: '', bloodGroup: 'A+', userType: 'student', rollNumber: '', address: '' });
     } catch (err) {
-      toast.error('Server error');
+      toast.error(err.message || 'Failed to add donor');
     } finally {
       setIsAdding(false);
     }
@@ -133,7 +110,6 @@ const DonorManagement = () => {
     if (!confirmModal.action) return {};
     switch(confirmModal.action) {
       case 'DELETE': return { title: 'Delete Donor', message: 'Are you sure you want to completely delete this donor? This cannot be undone.', type: 'danger', confirmText: 'Delete' };
-      case 'TOGGLE_AVAILABILITY': return { title: 'Change Availability', message: `Are you sure you want to mark this donor as ${confirmModal.data.isAvailable ? 'Not Available' : 'Available'}?`, type: 'warning', confirmText: 'Change' };
       case 'TOGGLE_VERIFY': return { title: confirmModal.data.isVerified ? 'Unverify Donor' : 'Verify Donor', message: confirmModal.data.isVerified ? 'Are you sure you want to remove verification from this donor?' : 'Are you sure you want to verify this donor and make them visible for public broadcasts?', type: 'warning', confirmText: confirmModal.data.isVerified ? 'Unverify' : 'Verify' };
       case 'UPDATE_DATE': return { title: 'Update Donation Date', message: 'Are you sure you want to update the last donation date?', type: 'info', confirmText: 'Update' };
       default: return {};
@@ -141,129 +117,132 @@ const DonorManagement = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden animate-in fade-in duration-700">
+      <div className="p-8 border-b border-gray-50 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Donor Directory</h2>
-          <p className="text-gray-500 text-sm mt-1">Manage public donor entries.</p>
+          <h2 className="text-3xl font-black text-gray-900 tracking-tight">Donor Directory</h2>
+          <p className="text-gray-500 font-medium text-sm mt-1">Institutional and local donor coordination.</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-md text-sm font-semibold transition-colors">
-            <Plus className="w-4 h-4" /> Add Donor
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap items-center gap-4 w-full xl:w-auto">
+          <button 
+            onClick={() => setIsAddModalOpen(true)} 
+            className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-2xl text-sm font-black tracking-widest uppercase transition-all shadow-lg active:scale-95"
+          >
+            <Plus className="w-5 h-5" /> Add New
           </button>
           
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="relative group flex-1 min-w-[200px]">
+            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" />
             <input 
               type="text" 
-              placeholder="Search name/phone..." 
+              placeholder="Search directory..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-gray-200 rounded-md text-sm focus:ring-primary outline-none"
+              className="w-full pl-11 pr-4 py-3 bg-gray-50 hover:bg-white border-transparent focus:bg-white rounded-2xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:font-medium"
             />
           </div>
-          <select value={filterGroup} onChange={(e) => setFilterGroup(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-md text-sm outline-none bg-white">
-            <option value="All">All Blood Groups</option>
+          <select value={filterGroup} onChange={(e) => setFilterGroup(e.target.value)} className="px-4 py-3 bg-gray-50 hover:bg-white rounded-2xl text-sm font-bold outline-none border-transparent transition-all cursor-pointer">
+            <option value="All">All Groups</option>
             {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
           </select>
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-md text-sm outline-none bg-white">
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-4 py-3 bg-gray-50 hover:bg-white rounded-2xl text-sm font-bold outline-none border-transparent transition-all cursor-pointer">
             <option value="All">All Types</option>
-            <option value="student">Students</option>
-            <option value="resident">Residents</option>
+            <option value="student">Student</option>
+            <option value="resident">Resident</option>
           </select>
-          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
-            <input type="checkbox" checked={filterAvailable} onChange={e => setFilterAvailable(e.target.checked)} className="rounded text-primary h-4 w-4" />
-            Available Only
+          <label className="flex items-center gap-3 text-sm font-bold text-gray-600 cursor-pointer select-none bg-gray-50 px-4 py-3 rounded-2xl hover:bg-white transition-all">
+            <input type="checkbox" checked={filterAvailable} onChange={e => setFilterAvailable(e.target.checked)} className="rounded-lg text-primary h-5 w-5 border-gray-300 focus:ring-primary" />
+            Active Only
           </label>
         </div>
       </div>
 
       <div className="overflow-x-auto w-full relative">
-        {isLoading && (
-          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        )}
-        <table className="w-full text-left border-collapse min-w-[800px]">
+        <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500">
-              <th className="p-4 font-semibold">Donor Details</th>
-              <th className="p-4 font-semibold text-center">Blood Group</th>
-              <th className="p-4 font-semibold">Type / Roll No</th>
-              <th className="p-4 font-semibold">Last Donated</th>
-              <th className="p-4 font-semibold text-center">Available</th>
-              <th className="p-4 font-semibold text-center">Verified</th>
-              <th className="p-4 font-semibold text-right">Actions</th>
+            <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+              <th className="px-8 py-5">Donor Profile</th>
+              <th className="px-4 py-5 text-center">Group</th>
+              <th className="px-4 py-5">Affiliation</th>
+              <th className="px-4 py-5">Donation History</th>
+              <th className="px-4 py-5 text-center">Status</th>
+              <th className="px-4 py-5 text-center">Trust Level</th>
+              <th className="px-8 py-5 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 text-sm opacity-100 transition-opacity">
-            {filteredDonors.map(donor => (
-              <tr key={donor._id} className="hover:bg-gray-50 transition-colors">
-                <td className="p-4">
-                  <div className="font-medium text-gray-900">{donor.firstName} {donor.lastName}</div>
-                  <div className="text-gray-500 text-xs mt-0.5">{donor.phone}</div>
-                  {donor.address && <div className="text-gray-400 text-xs mt-0.5 truncate max-w-[200px]" title={donor.address}>{donor.address}</div>}
+          <tbody className="divide-y divide-gray-50 text-sm">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} columns={7} />)
+            ) : filteredDonors.map(donor => (
+              <tr key={donor._id} className="hover:bg-primary/5 transition-all group/row">
+                <td className="px-8 py-6">
+                  <div className="font-bold text-gray-900 group-hover/row:text-primary transition-colors">{donor.firstName} {donor.lastName}</div>
+                  <div className="text-gray-500 font-mono text-xs mt-1 tracking-tighter">{donor.phone}</div>
+                  {donor.address && <div className="text-gray-400 text-[10px] mt-1 truncate max-w-[180px] font-medium" title={donor.address}>{donor.address}</div>}
                 </td>
-                <td className="p-4 text-center">
-                  <span className="inline-flex items-center justify-center bg-red-100 text-red-800 font-bold px-2 py-1 rounded w-10 text-xs">
+                <td className="px-4 py-6 text-center">
+                  <span className="inline-flex items-center justify-center bg-red-50 text-primary font-black px-3 py-1.5 rounded-xl min-w-[3rem] text-[11px] border border-red-100">
                     {donor.bloodGroup}
                   </span>
                 </td>
-                <td className="p-4">
-                  <span className="capitalize font-medium text-gray-800">{donor.userType}</span>
-                  {donor.rollNumber && <div className="text-xs text-gray-500 mt-0.5 uppercase">{donor.rollNumber}</div>}
+                <td className="px-4 py-6">
+                  <span className="capitalize font-bold text-gray-700 text-xs px-2.5 py-1 bg-gray-100 rounded-lg">{donor.userType}</span>
+                  {donor.rollNumber && <div className="text-[10px] font-black text-gray-400 mt-2 uppercase tracking-widest">{donor.rollNumber}</div>}
                 </td>
-                <td className="p-4">
-                  <div className="flex flex-col gap-1">
+                <td className="px-4 py-6">
+                  <div className="flex flex-col gap-2">
                     <input
                       type="date"
                       max={new Date().toISOString().split('T')[0]}
                       value={donor.lastDonated ? donor.lastDonated.split('T')[0] : ''}
                       onChange={(e) => setConfirmModal({ isOpen: true, data: { id: donor._id, lastDonated: e.target.value }, action: 'UPDATE_DATE' })}
-                      className="border border-gray-200 rounded p-1 text-xs text-gray-700 bg-white cursor-pointer hover:border-primary focus:outline-none"
+                      className="bg-gray-50 group-hover/row:bg-white border-transparent rounded-xl p-2 text-[10px] font-black text-gray-600 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all outline-none"
                     />
                     {donor.lastDonated && (() => {
                       const days = Math.floor((new Date() - new Date(donor.lastDonated)) / (1000 * 60 * 60 * 24));
-                      return <span className={`text-[10px] font-medium ${days < 60 ? 'text-red-500' : 'text-green-600'}`}>{days}d ago</span>;
+                      return <span className={`text-[9px] font-black uppercase tracking-wider px-2 ${days < 60 ? 'text-red-500' : 'text-green-600'}`}>{days}d since donation</span>;
                     })()}
                   </div>
                 </td>
-                <td className="p-4 text-center">
+                <td className="px-4 py-6 text-center">
                   {(() => {
                     const available = computeAvailability(donor);
                     return (
-                      <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded ${
-                        available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'
+                      <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${
+                        available ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
                       }`}>
                         {available ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                        {available ? 'Available' : 'Unavailable'}
+                        {available ? 'Ready' : 'Resting'}
                       </span>
                     );
                   })()}
                 </td>
-                <td className="p-4 text-center">
+                <td className="px-4 py-6 text-center">
                    <button 
                     onClick={() => setConfirmModal({ isOpen: true, data: { id: donor._id, isVerified: donor.isVerified }, action: 'TOGGLE_VERIFY' })}
-                    className={`text-xs font-semibold px-3 py-1 rounded-full transition-colors w-20 ${donor.isVerified ? 'bg-blue-100 text-blue-700 hover:bg-blue-200/50' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'}`}
+                    className={`text-[10px] font-black uppercase tracking-[0.1em] px-4 py-1.5 rounded-xl transition-all active:scale-95 ${donor.isVerified ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-orange-50 text-orange-700 border border-orange-100'}`}
                   >
-                    {donor.isVerified ? 'Verified' : 'Verify'}
+                    {donor.isVerified ? 'Verified' : 'Pending'}
                   </button>
                 </td>
-                <td className="p-4 text-right">
+                <td className="px-8 py-6 text-right">
                   <button 
                     onClick={() => setConfirmModal({ isOpen: true, data: { id: donor._id }, action: 'DELETE' })}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors inline-block"
+                    className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-xl transition-all active:scale-95"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-5 h-5" />
                   </button>
                 </td>
               </tr>
             ))}
             {!isLoading && filteredDonors.length === 0 && (
               <tr>
-                <td colSpan="7" className="p-8 text-center text-gray-500">
-                  No donors found matching criteria.
+                <td colSpan="7" className="p-20 text-center">
+                  <div className="flex flex-col items-center gap-2 opacity-20">
+                    <Search className="w-12 h-12" />
+                    <p className="font-black uppercase tracking-widest text-xs">No Results Found</p>
+                  </div>
                 </td>
               </tr>
             )}
@@ -281,62 +260,77 @@ const DonorManagement = () => {
 
       {/* Add Donor Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setIsAddModalOpen(false)}></div>
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative transform overflow-hidden rounded-xl bg-white shadow-xl transition-all w-full max-w-lg p-6">
-              <div className="flex justify-between items-center mb-5">
-                <h3 className="text-xl font-bold">Add New Donor</h3>
-                <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setIsAddModalOpen(false)}></div>
+          <div className="relative transform overflow-hidden rounded-[2.5rem] bg-white shadow-2xl transition-all w-full max-w-lg p-10 animate-in zoom-in duration-300 border border-gray-100">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h3 className="text-2xl font-black text-gray-900 tracking-tight">Onboard Donor</h3>
+                <p className="text-gray-400 font-medium text-sm">New database entry.</p>
               </div>
-              <form onSubmit={handleAddDonor} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm mb-1 text-gray-700">First Name <span className="text-red-500">*</span></label>
-                    <input required value={newDonor.firstName} onChange={e=>setNewDonor({...newDonor, firstName: e.target.value})} className="w-full border rounded p-2 text-sm focus:border-primary outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1 text-gray-700">Last Name <span className="text-red-500">*</span></label>
-                    <input required value={newDonor.lastName} onChange={e=>setNewDonor({...newDonor, lastName: e.target.value})} className="w-full border rounded p-2 text-sm focus:border-primary outline-none" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm mb-1 text-gray-700">Phone <span className="text-gray-400 font-normal">(11 digits)</span> <span className="text-red-500">*</span></label>
-                  <input required type="tel" pattern="[0-9]{11}" placeholder="03001234567" value={newDonor.phone} onChange={e=>setNewDonor({...newDonor, phone: e.target.value})} className="w-full border rounded p-2 text-sm focus:border-primary outline-none" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm mb-1 text-gray-700">Blood Group <span className="text-red-500">*</span></label>
-                    <select value={newDonor.bloodGroup} onChange={e=>setNewDonor({...newDonor, bloodGroup: e.target.value})} className="w-full border rounded p-2 text-sm focus:border-primary outline-none bg-white">
-                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1 text-gray-700">Role <span className="text-red-500">*</span></label>
-                    <select value={newDonor.userType} onChange={e=>setNewDonor({...newDonor, userType: e.target.value})} className="w-full border rounded p-2 text-sm focus:border-primary outline-none bg-white">
-                      <option value="student">Student</option>
-                      <option value="resident">Resident</option>
-                    </select>
-                  </div>
-                </div>
-                {newDonor.userType === 'student' && (
-                  <div>
-                    <label className="block text-sm mb-1 text-gray-700">Roll Number</label>
-                    <input value={newDonor.rollNumber} onChange={e=>setNewDonor({...newDonor, rollNumber: e.target.value})} placeholder="e.g. 21BSCS01" className="w-full border rounded p-2 text-sm focus:border-primary outline-none" />
-                  </div>
-                )}
-                <div>
-                  <label className="block text-sm mb-1 text-gray-700">Address/Department <span className="text-red-500">*</span></label>
-                  <input required value={newDonor.address} onChange={e=>setNewDonor({...newDonor, address: e.target.value})} className="w-full border rounded p-2 text-sm focus:border-primary outline-none" />
-                </div>
-                <div className="pt-2 flex justify-end gap-3">
-                  <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 border rounded text-sm font-semibold text-gray-700 hover:bg-gray-50">Cancel</button>
-                  <button type="submit" disabled={isAdding} className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded text-sm font-semibold disabled:opacity-50">
-                    {isAdding ? 'Adding...' : 'Add Donor'}
-                  </button>
-                </div>
-              </form>
+              <button 
+                onClick={() => setIsAddModalOpen(false)} 
+                className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-900 transition-all active:scale-95"
+              >
+                <X className="w-6 h-6"/>
+              </button>
             </div>
+            
+            <form onSubmit={handleAddDonor} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">First Name</label>
+                  <input required value={newDonor.firstName} onChange={e=>setNewDonor({...newDonor, firstName: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Last Name</label>
+                  <input required value={newDonor.lastName} onChange={e=>setNewDonor({...newDonor, lastName: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Phone Number</label>
+                <input required type="tel" pattern="[0-9]{11}" placeholder="03XXXXXXXXX" value={newDonor.phone} onChange={e=>setNewDonor({...newDonor, phone: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm font-mono focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Blood Group</label>
+                  <select value={newDonor.bloodGroup} onChange={e=>setNewDonor({...newDonor, bloodGroup: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white font-bold cursor-pointer">
+                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Profile Type</label>
+                  <select value={newDonor.userType} onChange={e=>setNewDonor({...newDonor, userType: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white font-bold cursor-pointer">
+                    <option value="student">Student</option>
+                    <option value="resident">Resident</option>
+                  </select>
+                </div>
+              </div>
+
+              {newDonor.userType === 'student' && (
+                <div className="animate-in fade-in slide-in-from-top duration-300">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Roll Number</label>
+                  <input value={newDonor.rollNumber} onChange={e=>setNewDonor({...newDonor, rollNumber: e.target.value})} placeholder="e.g. 21BSCS01" className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm font-mono focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Location Details</label>
+                <input required value={newDonor.address} onChange={e=>setNewDonor({...newDonor, address: e.target.value})} className="w-full bg-gray-50 border-transparent rounded-2xl p-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Hostel or Full Address" />
+              </div>
+
+              <div className="pt-4">
+                <button 
+                  type="submit" 
+                  disabled={isAdding} 
+                  className="w-full bg-primary hover:bg-primary-hover text-white font-black py-5 rounded-[1.5rem] shadow-xl transition-all active:scale-95 disabled:opacity-50 text-sm uppercase tracking-[0.2em]"
+                >
+                  {isAdding ? 'Processing...' : 'Add Donor Record'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -9,7 +9,7 @@ const Member = require('../models/Member');
 const { auth, checkRole } = require('../middleware/auth');
 
 // @route   POST /api/admin/login
-// @desc    Authenticate admin & get token
+// @desc    Authenticate admin & set cookie
 // @access  Public
 router.post('/login', async (req, res) => {
   try {
@@ -31,17 +31,34 @@ router.post('/login', async (req, res) => {
 
     jwt.sign(
       payload,
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '12h' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token, role: admin.role });
+        
+        // Use secure cookie for token
+        res.cookie('adminToken', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 12 * 60 * 60 * 1000 // 12 hours
+        });
+
+        res.json({ role: admin.role });
       }
     );
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ message: 'Server Error' });
   }
+});
+
+// @route   POST /api/admin/logout
+// @desc    Clear admin session
+// @access  Private
+router.post('/logout', auth, (req, res) => {
+  res.clearCookie('adminToken');
+  res.json({ message: 'Logged out successfully' });
 });
 
 // @route   GET /api/admin/all
@@ -147,12 +164,18 @@ router.post('/donors', auth, async (req, res) => {
 // @access  Private (Admin)
 router.put('/donors/:id', auth, async (req, res) => {
   try {
-    const { isVerified, isAvailable, lastDonated } = req.body;
+    const { isVerified, lastDonated } = req.body;
 
     const donorFields = {};
     if (isVerified !== undefined) donorFields.isVerified = isVerified;
-    if (isAvailable !== undefined) donorFields.isAvailable = isAvailable;
-    if (lastDonated !== undefined) donorFields.lastDonated = lastDonated;
+    
+    if (lastDonated !== undefined) {
+      const donationDate = new Date(lastDonated);
+      if (isNaN(donationDate.getTime()) || donationDate > new Date()) {
+        return res.status(400).json({ message: 'Invalid or future date not allowed for lastDonated' });
+      }
+      donorFields.lastDonated = lastDonated;
+    }
 
     let donor = await Donor.findById(req.params.id);
     if (!donor) return res.status(404).json({ message: 'Donor not found' });

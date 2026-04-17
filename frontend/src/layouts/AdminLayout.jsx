@@ -1,19 +1,33 @@
 import React, { useState } from 'react';
-import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Users, AlertCircle, LogOut, Shield, Menu, X, ShieldCheck, UserCheck } from 'lucide-react';
+import { useToast } from '../components/ui/ToastProvider';
+import { fetchWithRetry, API_BASE } from '../api';
 
 const AdminLayout = () => {
-  const token = localStorage.getItem('adminToken');
+  const role = localStorage.getItem('adminRole');
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  if (!token) {
+  // Authentication check — cookies are handled by browser/backend
+  if (!role) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    window.location.href = '/admin/login';
+  const handleLogout = async () => {
+    try {
+      await fetchWithRetry(`${API_BASE}/api/admin/logout`, { method: 'POST' }, 0);
+      localStorage.removeItem('adminRole');
+      toast.success('Logged out successfully');
+      navigate('/admin/login');
+    } catch (err) {
+      console.error('Logout failed', err);
+      // Fallback: clear role and redirect anyway
+      localStorage.removeItem('adminRole');
+      navigate('/admin/login');
+    }
   };
 
   const navLinks = [
@@ -22,7 +36,7 @@ const AdminLayout = () => {
     { name: 'Emergency Requests', path: '/admin/requests', icon: AlertCircle },
   ];
 
-  if (localStorage.getItem('adminRole') === 'MASTER_ADMIN') {
+  if (role === 'MASTER_ADMIN') {
     navLinks.push({ name: 'Admin Management', path: '/admin/management', icon: ShieldCheck });
   }
 

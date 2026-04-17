@@ -23,4 +23,7 @@ const memberSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+memberSchema.index({ phone: 1 });
+memberSchema.index({ isAvailable: 1 });
+
 module.exports = mongoose.model('Member', memberSchema);

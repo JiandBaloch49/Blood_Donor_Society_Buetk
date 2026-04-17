@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "install-all": "npm install --prefix backend && npm install --prefix frontend && npm install",
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev": "concurrently \"npm.cmd run dev --prefix backend\" \"npm.cmd run dev --prefix frontend\"",
     "seed": "node backend/seedAdmin.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

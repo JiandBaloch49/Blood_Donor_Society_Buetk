@@ -48,4 +48,8 @@ const donorSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+donorSchema.index({ bloodGroup: 1 });
+donorSchema.index({ lastDonated: 1 });
+donorSchema.index({ phone: 1 });
+
 module.exports = mongoose.model('Donor', donorSchema);

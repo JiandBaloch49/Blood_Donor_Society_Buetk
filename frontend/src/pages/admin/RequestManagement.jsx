@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Radio, Trash2 } from 'lucide-react';
+import { Radio, Trash2, Calendar, Phone, Activity, CheckCircle2 } from 'lucide-react';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useToast } from '../../components/ui/ToastProvider';
+import { fetchWithRetry, API_BASE } from '../../api';
 
 const RequestManagement = () => {
   const [requests, setRequests] = useState([]);
@@ -13,17 +14,10 @@ const RequestManagement = () => {
   const fetchRequests = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/admin/requests', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setRequests(data);
-      } else {
-        toast.error('Failed to fetch requests');
-      }
+      const data = await fetchWithRetry(`${API_BASE}/api/admin/requests`);
+      setRequests(data);
     } catch (err) {
-      toast.error('Backend unreachable');
+      toast.error(err.message || 'Failed to fetch requests');
     } finally {
       setIsLoading(false);
     }
@@ -38,7 +32,7 @@ const RequestManagement = () => {
     setConfirmModal({ ...confirmModal, isLoading: true });
 
     try {
-      let url = `http://localhost:5000/api/admin/requests/${data.id}`;
+      let url = `${API_BASE}/api/admin/requests/${data.id}`;
       let method = 'PUT';
       let bodyData = null;
 
@@ -50,27 +44,19 @@ const RequestManagement = () => {
         method = 'DELETE';
       }
 
-      const options = {
+      const resData = await fetchWithRetry(url, {
         method,
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}`, 'Content-Type': 'application/json' }
-      };
-      if (bodyData) options.body = JSON.stringify(bodyData);
+        body: bodyData ? JSON.stringify(bodyData) : undefined
+      });
 
-      const res = await fetch(url, options);
-      const resData = await res.json();
-
-      if (res.ok) {
-        toast.success(action === 'DELETE' ? 'Request deleted' : 'Request updated successfully');
-        if (action === 'DELETE') {
-          setRequests(requests.filter(r => r._id !== data.id));
-        } else {
-          setRequests(requests.map(r => r._id === data.id ? resData : r));
-        }
+      toast.success(action === 'DELETE' ? 'Request deleted successfully' : 'Status updated successfully');
+      if (action === 'DELETE') {
+        setRequests(requests.filter(r => r._id !== data.id));
       } else {
-        toast.error(resData.message || 'Action failed');
+        setRequests(requests.map(r => r._id === data.id ? resData : r));
       }
     } catch (err) {
-      toast.error('Server error');
+      toast.error(err.message || 'Action failed');
     } finally {
       setConfirmModal({ isOpen: false, data: null, action: null });
     }
@@ -78,103 +64,142 @@ const RequestManagement = () => {
 
   const getUrgencyBadge = (urgency) => {
     switch(urgency) {
-      case 'critical': return <span className="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Critical</span>;
-      case 'high': return <span className="bg-orange-100 text-orange-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">High</span>;
-      default: return <span className="bg-gray-100 text-gray-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">{urgency}</span>;
+      case 'critical': return <span className="bg-red-50 text-red-600 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-widest border border-red-100 ring-2 ring-red-50/50 animate-pulse">Critical</span>;
+      case 'high': return <span className="bg-orange-50 text-orange-600 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-widest border border-orange-100">High</span>;
+      default: return <span className="bg-gray-50 text-gray-400 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-widest border border-gray-100">{urgency}</span>;
     }
   };
 
   const getModalProps = () => {
     if (!confirmModal.action) return {};
     switch(confirmModal.action) {
-      case 'VERIFY': return { title: 'Verify Request', message: 'Are you sure you want to verify this request? It will be ready for broadcast.', type: 'info', confirmText: 'Verify' };
-      case 'FULFILL': return { title: 'Fulfill Request', message: 'Are you sure you completed this request? This marks it as matched with a donor.', type: 'success', confirmText: 'Mark Complete' };
-      case 'DELETE': return { title: 'Delete Request', message: 'Are you sure you want to permanently delete this request?', type: 'danger', confirmText: 'Delete' };
+      case 'VERIFY': return { title: 'Verify & Broadcast', message: 'Ready to broadcast this emergency to the public network?', type: 'info', confirmText: 'Start Broadcast' };
+      case 'FULFILL': return { title: 'Mark as Fulfilled', message: 'Confirm that this patient has received the necessary donated blood?', type: 'success', confirmText: 'Finalize Fulfillment' };
+      case 'DELETE': return { title: 'Expunge Record', message: 'Permanently remove this request from the secure ledger? This action is irreversible.', type: 'danger', confirmText: 'Delete Forever' };
       default: return {};
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative min-h-[400px]">
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-2xl font-bold text-gray-900">Emergency Broadcast Hub</h2>
-        <p className="text-gray-500 text-sm mt-1">Review incoming public requests and verify them for broadcast.</p>
+    <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden relative animate-in fade-in duration-700 min-h-[500px]">
+      <div className="p-8 border-b border-gray-50">
+        <h2 className="text-3xl font-black text-gray-900 tracking-tight">Emergency Hub</h2>
+        <p className="text-gray-500 font-medium text-sm mt-1">Real-time triage and public broadcast coordination.</p>
       </div>
 
-      {isLoading && requests.length === 0 ? (
-        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 bg-gray-50/50">
-          {requests.map(request => (
-            <div key={request._id} className={`bg-white rounded-lg shadow-sm border flex flex-col relative overflow-hidden group ${request.status === 'pending' ? 'border-primary/30 border-t-4 border-t-primary' : 'border-gray-200'}`}>
-              
-              <button 
-                onClick={() => setConfirmModal({ isOpen: true, data: { id: request._id }, action: 'DELETE' })}
-                className="absolute top-2 right-2 p-2 bg-white rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Delete Request"
+      <div className="p-8 bg-gray-50/50 min-h-[400px]">
+        {isLoading && requests.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 gap-4">
+             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Syncing Ledgers...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {requests.map(request => (
+              <div 
+                key={request._id} 
+                className={`bg-white rounded-3xl shadow-sm border-2 transition-all group relative overflow-hidden flex flex-col ${
+                  request.status === 'pending' 
+                  ? 'border-primary/20 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10' 
+                  : 'border-gray-100 opacity-80'
+                }`}
               >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                
+                {/* Delete Trigger */}
+                <button 
+                  onClick={() => setConfirmModal({ isOpen: true, data: { id: request._id }, action: 'DELETE' })}
+                  className="absolute top-4 right-4 p-2.5 bg-gray-50 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded-xl transition-all active:scale-95 z-10"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
 
-              <div className="p-5 flex-1 flex flex-col">
-                <div className="flex justify-between items-start mb-4 pr-6">
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-900">{request.patientName}</h3>
-                    <p className="text-sm text-gray-500">{new Date(request.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <div className="text-center">
-                    <span className="block bg-red-100 text-red-800 text-lg font-bold px-3 py-1 rounded-md">
-                      {request.bloodGroup}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-2 text-sm text-gray-600 mb-6 flex-1">
-                  <p><span className="font-medium text-gray-900">Hospital:</span> {request.hospital}</p>
-                  <p><span className="font-medium text-gray-900">Contact:</span> {request.phone || request.attendantPhone}</p>
-                  <p className="flex items-center gap-2"><span className="font-medium text-gray-900">Urgency:</span> {getUrgencyBadge(request.urgency)}</p>
-                </div>
-
-                <div className="mt-auto border-t border-gray-100 pt-4 flex gap-2">
-                  {request.status === 'pending' && (
-                    <button 
-                      onClick={() => setConfirmModal({ isOpen: true, data: { id: request._id }, action: 'VERIFY' })}
-                      className="flex-1 bg-primary hover:bg-primary-hover text-white font-semibold py-2 px-3 rounded text-sm transition-colors flex items-center justify-center gap-2 shadow-sm"
-                    >
-                      <Radio className="w-4 h-4" />
-                      Verify & Broadcast
-                    </button>
-                  )}
-                  
-                  {request.status === 'verified' && (
-                    <button 
-                      onClick={() => setConfirmModal({ isOpen: true, data: { id: request._id }, action: 'FULFILL' })}
-                      className="flex-1 bg-green-100 hover:bg-green-200 text-green-800 font-semibold py-2 px-3 rounded text-sm transition-colors border border-green-200"
-                    >
-                      Mark as Fulfilled
-                    </button>
-                  )}
-
-                  {request.status === 'fulfilled' && (
-                    <div className="flex-1 bg-gray-100 text-gray-500 font-semibold py-2 px-3 rounded text-sm text-center border border-gray-200">
-                      Request Completed
+                <div className="p-7 flex-1 flex flex-col">
+                  {/* Header */}
+                  <div className="flex justify-between items-start mb-6 pr-10">
+                    <div>
+                      <h3 className="font-black text-xl text-gray-900 tracking-tight group-hover:text-primary transition-colors">{request.patientName}</h3>
+                      <div className="flex items-center gap-2 mt-1 text-gray-400 font-bold uppercase text-[10px] tracking-widest">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(request.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
-                  )}
+                    <div className="bg-red-50 text-primary font-black px-4 py-2 rounded-2xl border border-red-100 text-lg shadow-sm">
+                      {request.bloodGroup}
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="space-y-4 mb-8 flex-1">
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
+                        <Activity className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Hospital Base</p>
+                        <p className="text-sm font-bold text-gray-800">{request.hospital}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
+                        <Phone className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <a href={`tel:${request.phone || request.attendantPhone}`} className="hover:text-primary transition-colors">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Communication</p>
+                        <p className="text-sm font-black text-gray-800 font-mono tracking-tighter">{request.phone || request.attendantPhone}</p>
+                      </a>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                      <span className="text-xs font-bold text-gray-500">Triage Level</span>
+                      {getUrgencyBadge(request.urgency)}
+                    </div>
+                  </div>
+
+                  {/* Action Bar */}
+                  <div className="mt-auto pt-4 flex gap-3">
+                    {request.status === 'pending' && (
+                      <button 
+                        onClick={() => setConfirmModal({ isOpen: true, data: { id: request._id }, action: 'VERIFY' })}
+                        className="flex-1 bg-primary hover:bg-primary-hover text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2"
+                      >
+                        <Radio className="w-4 h-4 animate-pulse" />
+                        Verify & Broadcast
+                      </button>
+                    )}
+                    
+                    {request.status === 'verified' && (
+                      <button 
+                        onClick={() => setConfirmModal({ isOpen: true, data: { id: request._id }, action: 'FULFILL' })}
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-xl shadow-green-500/20 active:scale-95 flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        Mark Fulfilled
+                      </button>
+                    )}
+
+                    {request.status === 'fulfilled' && (
+                      <div className="flex-1 bg-gray-100 text-gray-400 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest text-center border border-gray-200">
+                        Mission Accomplished
+                      </div>
+                    )}
+                  </div>
                 </div>
+
               </div>
+            ))}
 
-            </div>
-          ))}
-
-          {requests.length === 0 && (
-            <div className="col-span-full py-12 text-center text-gray-500 bg-white border border-dashed rounded-xl">
-              No emergency requests currently logged.
-            </div>
-          )}
-        </div>
-      )}
+            {requests.length === 0 && (
+              <div className="col-span-full py-20 text-center flex flex-col items-center justify-center bg-white border-4 border-dashed border-gray-50 rounded-[3rem]">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-gray-200">
+                   <Activity className="w-8 h-8" />
+                </div>
+                <p className="text-gray-300 font-black uppercase tracking-widest text-sm italic">Clear Ledger: No Active Emergencies</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <ConfirmModal 
         isOpen={confirmModal.isOpen}

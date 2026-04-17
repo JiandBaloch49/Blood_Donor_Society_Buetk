@@ -18,17 +18,17 @@ const Navbar = ({ activeForm, setActiveForm }) => {
         <div className="flex justify-between items-center h-20">
           
           {/* Logo */}
-          <button onClick={() => handleNavClick(null)} className="flex items-center gap-2 md:gap-2.5 flex-shrink-0 focus:outline-none">
+          <button onClick={() => handleNavClick(null)} className="flex items-center gap-2 md:gap-3 flex-shrink-0 focus:outline-none group">
             <img 
               src={logo} 
               alt="Blood Donor Society BUETK Logo" 
-              className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full object-cover shadow-sm border-2 border-white/10"
+              className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full object-cover shadow-md border-2 border-white/20 group-hover:scale-105 transition-transform"
             />
-            <div className="flex flex-col items-start font-['Inter',_'Poppins',_sans-serif] text-left justify-center">
-              <span className={`font-bold text-base sm:text-lg md:text-xl lg:text-2xl tracking-wide leading-none ${activeForm === null ? 'text-white drop-shadow-sm' : 'text-[#1E293B]'}`}>
+            <div className="flex flex-col items-start font-sans text-left justify-center">
+              <span className={`font-black text-sm sm:text-base md:text-xl lg:text-2xl tracking-tight leading-none ${activeForm === null ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]' : 'text-gray-900 duration-300'}`}>
                 Blood Donor
               </span>
-              <span className={`font-medium text-xs sm:text-sm md:text-base lg:text-lg tracking-widest leading-tight mt-0.5 lg:mt-1 ${activeForm === null ? 'text-white/90 drop-shadow-sm' : 'text-[#1E293B]/80'}`}>
+              <span className={`font-bold text-[9px] sm:text-xs md:text-sm lg:text-base tracking-[0.15em] leading-tight mt-0.5 ${activeForm === null ? 'text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]' : 'text-gray-600'}`}>
                 SOCIETY BUETK
               </span>
             </div>
