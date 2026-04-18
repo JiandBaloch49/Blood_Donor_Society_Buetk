@@ -184,7 +184,7 @@ const MemberManagement = () => {
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setIsAddModalOpen(false)}></div>
-          <div className="relative transform overflow-hidden rounded-[2.5rem] bg-white shadow-2xl transition-all w-full max-w-lg p-10 animate-in zoom-in duration-300 border border-gray-100">
+          <div className="relative transform overflow-y-auto rounded-[2.5rem] bg-white shadow-2xl transition-all w-full max-w-lg p-6 sm:p-10 pr-2 sm:pr-8 animate-in zoom-in duration-300 border border-gray-100 max-h-[90vh] custom-scrollbar">
             <div className="flex justify-between items-center mb-10">
               <div>
                 <h3 className="text-2xl font-black text-gray-900 tracking-tight">Onboard Member</h3>

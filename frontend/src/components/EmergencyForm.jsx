@@ -153,7 +153,7 @@ const EmergencyForm = () => {
             <button 
               disabled={isSubmitting} 
               type="submit" 
-              className="w-full relative bg-primary hover:bg-primary-hover text-white font-black py-6 rounded-[1.8rem] transition-all shadow-2xl shadow-primary/30 active:scale-95 disabled:opacity-70 text-sm uppercase tracking-[0.3em]"
+              className="w-full relative bg-primary hover:bg-primary-hover text-white font-black py-4 sm:py-6 rounded-[1.8rem] transition-all shadow-2xl shadow-primary/30 active:scale-95 disabled:opacity-70 text-xs sm:text-sm uppercase tracking-[0.1em] sm:tracking-[0.3em] overflow-hidden"
             >
               {isSubmitting ? (
                 <div className="flex items-center justify-center gap-3">

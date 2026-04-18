@@ -3,6 +3,8 @@ import Navbar from '../components/Navbar';
 import RegistrationForm from '../components/RegistrationForm';
 import EmergencyForm from '../components/EmergencyForm';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
+import { Link } from 'react-router-dom';
 import { Droplet, Phone, User, CheckCircle, XCircle, Activity, Building2, Clock, ChevronRight } from 'lucide-react';
 import { fetchWithRetry, API_BASE } from '../api';
 import { CardSkeleton } from '../components/ui/Skeleton';
@@ -44,20 +46,51 @@ const LandingPage = () => {
 
   return (
     <div className={`min-h-screen font-sans flex flex-col transition-colors duration-500 ${activeForm === null ? 'bg-white' : 'bg-gray-50'}`}>
+      <SEO 
+        title="Khuzdar Blood Donation | Give Blood, Save Lives - BUETK" 
+        description="The official blood donation network for Khuzdar residents and BUETK students. Request emergency blood or register as a donor today."
+        keywords="Blood Donation Khuzdar, BUETK Blood Society, Balochistan Blood Donors"
+      />
 
       {activeForm === null ? (
         <>
           {/* Unified Top Section: Navbar + Hero */}
-          <section className="relative w-full min-h-[40vh] sm:min-h-[50vh] lg:min-h-[90vh] flex flex-col">
+          <section className="relative w-full min-h-[70vh] sm:min-h-[50vh] lg:min-h-[90vh] flex flex-col">
 
             {/* SVG Background — absolute, z-0, anchors to left on desktop and center on mobile */}
             <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
+              <svg
+                viewBox="0 0 1440 1052"
+                preserveAspectRatio="xMaxYMid slice"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-full h-full block lg:hidden"
+              >
+                <defs>
+                  <filter id="hero_filter_shadow_mobile" x="-10" y="-100" width="1640" height="102" filterUnits="userSpaceOnUse">
+                    <feGaussianBlur stdDeviation="15" />
+                    <feColorMatrix type="matrix" values="0 0 0 0 0.647 0 0 0 0 0.643 0 0 0 0 0.643 0 0 0 0.4 0" />
+                  </filter>
+                  <linearGradient id="hero_grad_maroon_mobile" x1="325.389" y1="82.4479" x2="850.428" y2="938.039" gradientUnits="userSpaceOnUse">
+                    <stop offset="0.22" stopColor="#B32323" />
+                    <stop offset="0.67" stopColor="#6A0E0B" />
+                  </linearGradient>
+                </defs>
+                <g filter="url(#hero_filter_shadow_mobile)">
+                  <path
+                    d="M1381.48 890.956C1217.37 775.365 792.518 1044 515.516 1044C238.513 1044 13.9585 810.293 13.9585 522C13.9585 233.707 238.513 0 515.516 0C792.518 0 1626.57 1063.58 1381.48 890.956Z"
+                    fill="url(#hero_grad_maroon_mobile)"
+                  />
+                </g>
+              </svg>
+
+              {/* Desktop SVG — Blob on Left */}
               <svg
                 viewBox="600 100 1440 1052"
                 preserveAspectRatio="xMinYMid slice"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-full h-full block"
+                className="w-full h-full hidden lg:block"
               >
                 <defs>
                   <filter id="hero_filter_shadow" x="9.9585" y="0" width="1420.04" height="1052" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
@@ -94,32 +127,32 @@ const LandingPage = () => {
               {/* Left — Headline text, visually contained by SVG shape */}
               <div className="flex-1 flex items-center justify-center lg:justify-start px-8 sm:px-12 lg:px-20 text-center lg:text-left animate-in slide-in-from-left duration-700">
                 <div>
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.1] tracking-tight text-white drop-shadow-lg">
-                    <span className="block">Give Blood</span>
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.1] tracking-tight text-gray-900 lg:text-white lg:drop-shadow-lg">
+                    <span className="block text-primary lg:text-white">Give Blood</span>
                     <span className="block mt-1 sm:mt-2">Give Life</span>
                   </h1>
-                  <p className="mt-4 text-sm sm:text-base lg:text-lg text-white/80 font-medium max-w-md leading-relaxed">
+                  <p className="mt-4 text-sm sm:text-base lg:text-lg text-gray-500 lg:text-white/80 font-medium max-w-md leading-relaxed mx-auto lg:mx-0">
                     Join BUETK's elite coordination network. Real-time intelligence bridging donors and emergency needs.
                   </p>
                 </div>
               </div>
 
               {/* Right — CTA Buttons */}
-              <div className="flex-1 flex items-center justify-center lg:justify-start px-8 sm:px-12 lg:px-20 pb-12 lg:pb-0 animate-in fade-in slide-in-from-right duration-700">
+              <div className="flex-1 flex items-center justify-center lg:justify-start px-8 sm:px-12 lg:px-20 pb-20 lg:pb-0 animate-in fade-in slide-in-from-right duration-700 mt-auto lg:mt-0">
                 <div className="flex flex-col gap-5 w-full max-w-sm lg:max-w-xs">
-                  <button
-                    onClick={() => setActiveForm('emergency')}
+                  <Link
+                    to="/request"
                     className="w-full lg:w-auto py-5 lg:px-10 bg-primary hover:bg-primary-hover text-white text-lg font-black rounded-2xl shadow-2xl shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
                     <Droplet className="w-5 h-5 fill-white/20" />
                     Emergency Request
-                  </button>
-                  <button
-                    onClick={() => setActiveForm('register')}
-                    className="w-full lg:w-auto py-5 lg:px-10 bg-white text-primary border-2 border-primary/10 hover:border-primary/30 hover:bg-primary hover:text-white text-lg font-black rounded-2xl shadow-xl transition-all active:scale-95"
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="w-full lg:w-auto py-5 lg:px-10 bg-white text-primary border-2 border-primary/10 hover:border-primary/30 hover:bg-primary hover:text-white text-lg font-black rounded-2xl shadow-xl transition-all active:scale-95 text-center"
                   >
                     Become a Donor
-                  </button>
+                  </Link>
                 </div>
               </div>
 
@@ -298,7 +331,7 @@ const LandingPage = () => {
       ) : (
         /* Form View */
         <div className="flex flex-col flex-1">
-          <div className="relative z-20 w-full bg-white shadow-xl">
+          <div className="relative z-20 w-full">
             <Navbar activeForm={activeForm} setActiveForm={setActiveForm} />
           </div>
           <div className="flex-1 flex items-start justify-center p-4 sm:p-8 lg:p-14 w-full overflow-y-auto animate-in fade-in zoom-in duration-500">

@@ -3,6 +3,8 @@ import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-d
 import { Users, AlertCircle, LogOut, Shield, Menu, X, ShieldCheck, UserCheck } from 'lucide-react';
 import { useToast } from '../components/ui/ToastProvider';
 import { fetchWithRetry, API_BASE } from '../api';
+import logo from '../components/image.png';
+import buetk from '../components/buetk.png';
 
 const AdminLayout = () => {
   const role = localStorage.getItem('adminRole');
@@ -47,14 +49,24 @@ const AdminLayout = () => {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             
-            {/* Logo and Brand */}
-            <div className="flex items-center gap-3">
-              <Shield className="w-8 h-8 fill-white/20" />
-              <div className="flex flex-col justify-center">
-                <span className="text-lg sm:text-xl font-bold tracking-wide leading-none pt-1">Dashboard</span>
-                <span className="text-[0.65rem] sm:text-xs text-white/70 uppercase tracking-wider mt-1">Executive Management</span>
+            <Link to="/admin/donors" className="flex items-center gap-2 md:gap-3 group focus:outline-none">
+              <div className="flex gap-1.5">
+                <img 
+                  src={buetk} 
+                  alt="BUETK Monogram" 
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-full object-contain border-2 border-white/20 shadow-md transition-transform group-hover:scale-105"
+                />
+                <img 
+                  src={logo} 
+                  alt="Blood Donor Society Logo" 
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover border-2 border-white/20 shadow-md transition-transform group-hover:scale-105"
+                />
               </div>
-            </div>
+              <div className="flex flex-col justify-center">
+                <span className="text-sm md:text-base font-black tracking-tight leading-none">Blood Donor</span>
+                <span className="text-[10px] md:text-xs text-white/80 font-bold uppercase tracking-widest mt-1">SOCIETY BUETK</span>
+              </div>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center">

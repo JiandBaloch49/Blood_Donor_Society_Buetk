@@ -4,6 +4,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Public Pages
 import LandingPage from './pages/LandingPage';
+import RegisterDonor from './pages/RegisterDonor';
+import EmergencyRequest from './pages/EmergencyRequest';
 
 // Admin Architecture
 import AdminLogin from './pages/admin/AdminLogin';
@@ -26,8 +28,10 @@ function App() {
     <ErrorBoundary>
       <Router>
         <Routes>
-          {/* Public Route */}
+          {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/register" element={<RegisterDonor />} />
+          <Route path="/request" element={<EmergencyRequest />} />
           
           {/* Admin Login Route */}
           <Route path="/admin/login" element={<AdminLogin />} />

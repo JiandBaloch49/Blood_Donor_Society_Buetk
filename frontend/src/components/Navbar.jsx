@@ -1,34 +1,48 @@
 import React, { useState } from 'react';
-import { Droplet, Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import logo from './image.png';
+import buetk from './buetk.png';
 
 const Navbar = ({ activeForm, setActiveForm }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  const navigate = useNavigate();
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  const handleNavClick = (formName) => {
-    setActiveForm(formName);
+  const handleNavClick = (path, formName) => {
+    if (setActiveForm && formName !== undefined) {
+      setActiveForm(formName);
+    } else {
+      navigate(path || '/');
+    }
     setIsOpen(false);
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-transparent">
+    <nav className={`sticky top-0 z-50 w-full transition-all duration-300 ${activeForm === null ? 'bg-transparent' : 'bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           
           {/* Logo */}
           <button onClick={() => handleNavClick(null)} className="flex items-center gap-2 md:gap-3 flex-shrink-0 focus:outline-none group">
-            <img 
-              src={logo} 
-              alt="Blood Donor Society BUETK Logo" 
-              className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full object-cover shadow-md border-2 border-white/20 group-hover:scale-105 transition-transform"
-            />
+            <div className="flex gap-2">
+              <img 
+                src={buetk} 
+                alt="BUETK Monogram" 
+                className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full object-contain shadow-md border-2 border-white/20 group-hover:scale-105 transition-transform"
+              />
+              <img 
+                src={logo} 
+                alt="Blood Donor Society Logo" 
+                className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full object-cover shadow-md border-2 border-white/20 group-hover:scale-105 transition-transform"
+              />
+            </div>
             <div className="flex flex-col items-start font-sans text-left justify-center">
-              <span className={`font-black text-sm sm:text-base md:text-xl lg:text-2xl tracking-tight leading-none ${activeForm === null ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]' : 'text-gray-900 duration-300'}`}>
+              <span className={`font-black text-sm sm:text-base md:text-xl lg:text-2xl tracking-tight leading-none ${activeForm === null ? 'text-gray-900 lg:text-white lg:drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]' : 'text-gray-900 duration-300'}`}>
                 Blood Donor
               </span>
-              <span className={`font-bold text-[9px] sm:text-xs md:text-sm lg:text-base tracking-[0.15em] leading-tight mt-0.5 ${activeForm === null ? 'text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]' : 'text-gray-600'}`}>
+              <span className={`font-bold text-[9px] sm:text-xs md:text-sm lg:text-base tracking-[0.15em] leading-tight mt-0.5 ${activeForm === null ? 'text-gray-600 lg:text-white/95 lg:drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]' : 'text-gray-600'}`}>
                 SOCIETY BUETK
               </span>
             </div>
@@ -36,26 +50,29 @@ const Navbar = ({ activeForm, setActiveForm }) => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <button 
-              onClick={() => handleNavClick(null)} 
+            <Link 
+              to="/"
+              onClick={() => handleNavClick('/', null)} 
               className={`${activeForm === null ? 'text-primary font-bold' : 'text-gray-600'} hover:text-primary font-medium transition-colors`}
             >
               Home
-            </button>
-            <button 
-              onClick={() => handleNavClick('emergency')} 
+            </Link>
+            <Link 
+              to="/request" 
+              onClick={(e) => { if(setActiveForm) { e.preventDefault(); handleNavClick('/request', 'emergency'); } }}
               className={`${activeForm === 'emergency' ? 'text-primary font-bold' : 'text-gray-600'} hover:text-primary font-medium transition-colors`}
             >
               Emergency Request
-            </button>
-            <button 
-              onClick={() => handleNavClick('register')} 
+            </Link>
+            <Link 
+              to="/register" 
+              onClick={(e) => { if(setActiveForm) { e.preventDefault(); handleNavClick('/register', 'register'); } }}
               className={`${activeForm === 'register' ? 'text-primary font-bold' : 'text-gray-600'} hover:text-primary font-medium transition-colors`}
             >
               Register as Donor
-            </button>
+            </Link>
             <button 
-              onClick={() => handleNavClick('about')} 
+              onClick={() => handleNavClick(null, 'about')} 
               className={`${activeForm === 'about' ? 'text-primary font-bold' : 'text-gray-600'} hover:text-primary font-medium transition-colors`}
             >
               About Us
@@ -87,19 +104,19 @@ const Navbar = ({ activeForm, setActiveForm }) => {
               Home
             </button>
             <button 
-              onClick={() => handleNavClick('emergency')}
+              onClick={() => handleNavClick('/request', 'emergency')}
               className="block w-full px-3 py-4 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md border-b border-gray-50 text-center"
             >
               Emergency Request
             </button>
             <button 
-              onClick={() => handleNavClick('register')}
+              onClick={() => handleNavClick('/register', 'register')}
               className="block w-full px-3 py-4 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md border-b border-gray-50 text-center"
             >
               Register as Donor
             </button>
             <button 
-              onClick={() => handleNavClick('about')}
+              onClick={() => handleNavClick(null, 'about')}
               className="block w-full px-3 py-4 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md text-center"
             >
               About Us

@@ -32,7 +32,15 @@ app.use((req, res, next) => {
 app.use(cors({
   origin: (origin, callback) => {
     // Dynamically allow any local development origin
-    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    const isLocalNetwork = origin && (
+      origin.includes('localhost') || 
+      origin.includes('127.0.0.1') || 
+      origin.includes('192.168.') || 
+      origin.includes('10.') || 
+      origin.includes('172.')
+    );
+
+    if (!origin || isLocalNetwork) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
