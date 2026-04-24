@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { CheckCircle, XCircle, X } from 'lucide-react';
+import { CheckCircle, XCircle, X, AlertTriangle } from 'lucide-react';
 
 const ToastContext = createContext(null);
 
@@ -34,6 +34,7 @@ export const ToastProvider = ({ children }) => {
   const toast = {
     success: (msg, dur) => addToast(msg, 'success', dur),
     error: (msg, dur) => addToast(msg, 'error', dur),
+    warning: (msg, dur) => addToast(msg, 'warning', dur),
     info: (msg, dur) => addToast(msg, 'info', dur),
   };
 
@@ -46,6 +47,7 @@ export const ToastProvider = ({ children }) => {
             key={t.id}
             className={`pointer-events-auto flex items-center justify-between gap-3 min-w-[300px] max-w-sm rounded-lg p-4 shadow-lg animate-in slide-in-from-right-8 fade-in duration-300 ${
               t.type === 'error' ? 'bg-white border-l-4 border-red-500 text-gray-800' :
+              t.type === 'warning' ? 'bg-white border-l-4 border-orange-500 text-gray-800' :
               t.type === 'success' ? 'bg-white border-l-4 border-green-500 text-gray-800' :
               'bg-white border-l-4 border-blue-500 text-gray-800'
             }`}
@@ -53,6 +55,7 @@ export const ToastProvider = ({ children }) => {
             <div className="flex items-center gap-3 w-full">
               {t.type === 'success' && <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />}
               {t.type === 'error' && <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />}
+              {t.type === 'warning' && <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />}
               {t.type === 'info' && <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0" />}
               <p className="text-sm font-medium leading-tight">{t.message}</p>
             </div>

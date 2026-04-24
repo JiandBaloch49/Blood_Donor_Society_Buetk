@@ -554,7 +554,7 @@ const CaseManagement = () => {
                     <input name="attendantName" value={formData.attendantName} onChange={handleFormChange} placeholder="Name of attendant" className={inputClass} />
                   </FormField>
                   <FormField label="Attendant Phone" hint="Must be 11 digits if provided">
-                    <input name="attendantPhone" value={formData.attendantPhone} onChange={handleFormChange} placeholder="03XXXXXXXXX" className={`${inputClass} font-mono`} maxLength={11} />
+                    <input name="attendantPhone" type="tel" pattern="[0-9]{11}" value={formData.attendantPhone} onChange={handleFormChange} placeholder="03XXXXXXXXX" className={`${inputClass} font-mono`} maxLength={11} />
                   </FormField>
                   <div className="sm:col-span-2">
                     <FormField label="Attendant Residence / Location">
@@ -711,6 +711,8 @@ const CaseManagement = () => {
                     <FormField label="Donor Phone" hint={donorFlash ? '✓ Auto-filled from selection' : 'Auto-filled when donor selected'}>
                       <input
                         name="donorPhone"
+                        type="tel"
+                        pattern="[0-9]{11}"
                         value={formData.donorPhone}
                         onChange={handleFormChange}
                         placeholder="Auto-filled from selection above"

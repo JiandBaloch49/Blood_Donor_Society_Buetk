@@ -257,6 +257,30 @@ router.put('/donors/:id', auth, async (req, res) => {
   }
 });
 
+// @route   PATCH /api/admin/donors/:id/cancel
+// @desc    Record a donor cancellation (no-show after committing to donate)
+//          Increments `cancellations` and `totalResponses` atomically.
+//          When cancellations > 2 the reliabilityBadge virtual returns ⚠️ Low Response.
+// @access  Private (Admin)
+router.patch('/donors/:id/cancel', auth, async (req, res) => {
+  try {
+    const donor = await Donor.findById(req.params.id);
+    if (!donor) return res.status(404).json({ message: 'Donor not found' });
+
+    const updated = await Donor.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { cancellations: 1, totalResponses: 1 } },
+      { new: true }
+    );
+
+    // Return the updated donor with virtuals so the badge updates immediately
+    res.json(updated.toObject({ virtuals: true }));
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
 // @route   DELETE /api/admin/donors/:id
 // @desc    Delete donor
 // @access  Private (Admin)
@@ -344,10 +368,18 @@ router.post('/cases', auth, async (req, res) => {
 
     // Update donor stats atomically if a donor was assigned
     if (donorId) {
-      await Donor.findByIdAndUpdate(donorId, {
-        $inc: { totalDonations: 1 },
-        $set: { lastDonated: caseDate }
-      });
+      const donor = await Donor.findById(donorId);
+      if (donor) {
+        donor.totalDonations += 1;
+        // Phase 2 reliability stats
+        donor.successfulDonations += 1;
+        donor.totalResponses += 1;
+        if (donor.cancellations > 0) {
+          donor.cancellations -= 1;
+        }
+        donor.lastDonated = caseDate;
+        await donor.save();
+      }
     }
 
     res.status(201).json(newCase);

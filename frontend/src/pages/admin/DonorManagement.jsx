@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, CheckCircle, XCircle, Trash2, Plus, X, Award } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Trash2, Plus, X, Award, XOctagon } from 'lucide-react';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import DonorProfileModal from '../../components/ui/DonorProfileModal';
 import { useToast } from '../../components/ui/ToastProvider';
@@ -45,6 +45,20 @@ const DonorManagement = () => {
     setConfirmModal({ ...confirmModal, isLoading: true });
 
     try {
+      if (action === 'MARK_CANCEL') {
+        // PATCH /api/admin/donors/:id/cancel — increments cancellations by 1
+        const updated = await fetchWithRetry(`${API_BASE}/api/admin/donors/${data.id}/cancel`, {
+          method: 'PATCH'
+        });
+        toast.warning(`Cancellation recorded. ${updated.firstName} now has ${updated.cancellations} cancellation(s).`);
+        // Update local state immediately so the badge refreshes without a full reload
+        setDonors(prev => prev.map(d => d._id === data.id
+          ? { ...d, cancellations: updated.cancellations, totalResponses: updated.totalResponses, reliabilityBadge: updated.reliabilityBadge }
+          : d
+        ));
+        return;
+      }
+
       let url = `${API_BASE}/api/admin/donors/${data.id}`;
       let method = 'PUT';
       let bodyData = null;
@@ -66,7 +80,6 @@ const DonorManagement = () => {
       if (action === 'DELETE') {
         setDonors(donors.filter(d => d._id !== data.id));
       } else {
-        // Re-fetch to get updated priorities after date change
         fetchDonors();
       }
     } catch (err) {
@@ -111,6 +124,12 @@ const DonorManagement = () => {
       case 'DELETE': return { title: 'Delete Donor', message: 'Are you sure you want to completely delete this donor? This cannot be undone.', type: 'danger', confirmText: 'Delete' };
       case 'TOGGLE_VERIFY': return { title: confirmModal.data.isVerified ? 'Unverify Donor' : 'Verify Donor', message: confirmModal.data.isVerified ? 'Are you sure you want to remove verification from this donor?' : 'Are you sure you want to verify this donor and make them visible for public broadcasts?', type: 'warning', confirmText: confirmModal.data.isVerified ? 'Unverify' : 'Verify' };
       case 'UPDATE_DATE': return { title: 'Update Donation Date', message: 'Are you sure you want to update the last donation date?', type: 'info', confirmText: 'Update' };
+      case 'MARK_CANCEL': return {
+        title: 'Record Cancellation',
+        message: `Mark that ${confirmModal.data?.name} committed to donate but did not show up? This will increment their cancellation count. If they get more than 2 cancellations, they will receive a ⚠️ Low Response badge.`,
+        type: 'warning',
+        confirmText: 'Record Cancellation'
+      };
       default: return {};
     }
   };
@@ -258,12 +277,29 @@ const DonorManagement = () => {
                   </button>
                 </td>
                 <td className="px-8 py-6 text-right">
-                  <button
-                    onClick={() => setConfirmModal({ isOpen: true, data: { id: donor._id }, action: 'DELETE' })}
-                    className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-xl transition-all active:scale-95"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center justify-end gap-2">
+                    {/* Mark Cancelled — records a no-show */}
+                    <button
+                      onClick={() => setConfirmModal({ isOpen: true, data: { id: donor._id, name: `${donor.firstName} ${donor.lastName}` }, action: 'MARK_CANCEL' })}
+                      className="relative flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 transition-all active:scale-95"
+                      title="Record a cancellation (donor committed but didn't show up)"
+                    >
+                      <XOctagon className="w-3.5 h-3.5" />
+                      No-Show
+                      {donor.cancellations > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-orange-500 text-white text-[9px] font-black flex items-center justify-center">
+                          {donor.cancellations}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setConfirmModal({ isOpen: true, data: { id: donor._id }, action: 'DELETE' })}
+                      className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-xl transition-all active:scale-95"
+                      title="Delete donor"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
