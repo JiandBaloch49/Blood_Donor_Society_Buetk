@@ -31,18 +31,30 @@ app.use((req, res, next) => {
 // Security & Parsing
 app.use(cors({
   origin: (origin, callback) => {
-    // Dynamically allow any local development origin
-    const isLocalNetwork = origin && (
-      origin.includes('localhost') || 
-      origin.includes('127.0.0.1') || 
-      origin.includes('192.168.') || 
-      origin.includes('10.') || 
-      origin.includes('172.')
-    );
+    // List of allowed origins or patterns
+    // 1. No origin (direct requests, server-to-server)
+    if (!origin) return callback(null, true);
 
-    if (!origin || isLocalNetwork) {
+    // 2. Exact match check
+    const allowedPatterns = [
+      /^http:\/\/localhost:\d+$/,
+      /^http:\/\/127\.0\.0\.1:\d+$/,
+      /^http:\/\/192\.168\.\d+\.\d+:\d+$/,
+      /^http:\/\/10\.\d+\.\d+\.\d+:\d+$/,
+      /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+:\d+$/ // Standard RFC1918 Class B
+    ];
+
+    // Added specific support for the requested IP just in case it falls outside standard Class B regex
+    if (origin.includes('172.16.46.226')) {
+       return callback(null, true);
+    }
+
+    const isMatch = allowedPatterns.some(pattern => pattern.test(origin));
+
+    if (isMatch) {
       callback(null, true);
     } else {
+      console.warn(`Blocked by CORS: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -53,9 +65,11 @@ app.use(express.json());
 // Routes
 const publicRoutes = require('./routes/publicRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const chronicRoutes = require('./routes/chronicRoutes');
 
 app.use('/api/public', publicRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/chronic', chronicRoutes);
 
 const path = require('path');
 // Serve frontend static files if in production or dist exists
@@ -102,6 +116,10 @@ mongoose.connect(MONGO_URI, {
       console.log(`🌐 API Server: http://localhost:${PORT}`);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     });
+
+    // Phase 3: Start auto-expiry cron jobs
+    const { startCronJobs } = require('./utils/cronJobs');
+    startCronJobs();
   })
   .catch(err => {
     console.error('❌ FATAL DATABASE ERROR:', err.message);

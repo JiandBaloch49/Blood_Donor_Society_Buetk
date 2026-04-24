@@ -45,8 +45,41 @@ const donorSchema = new mongoose.Schema({
   isAvailable: {
     type: Boolean,
     default: true
+  },
+  totalDonations: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+
+  // ── Phase 2: Reliability Scoring ─────────────────────────────────────────────
+  successfulDonations: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  totalResponses: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  cancellations: {
+    type: Number,
+    default: 0,
+    min: 0
   }
 }, { timestamps: true });
+
+// ── Virtual: reliabilityBadge ────────────────────────────────────────────────
+donorSchema.virtual('reliabilityBadge').get(function () {
+  if (this.cancellations > 2) return '⚠️ Low Response';
+  if (this.successfulDonations >= 2) return '⭐ Reliable';
+  return 'New/Neutral';
+});
+
+// Ensure virtuals are included when serialized
+donorSchema.set('toJSON', { virtuals: true });
+donorSchema.set('toObject', { virtuals: true });
 
 donorSchema.index({ bloodGroup: 1 });
 donorSchema.index({ lastDonated: 1 });

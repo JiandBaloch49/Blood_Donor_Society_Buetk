@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Edit2, CheckCircle, XCircle, Trash2, Plus, X } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Trash2, Plus, X, Award } from 'lucide-react';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import DonorProfileModal from '../../components/ui/DonorProfileModal';
 import { useToast } from '../../components/ui/ToastProvider';
 import { fetchWithRetry, API_BASE } from '../../api';
 import { TableRowSkeleton } from '../../components/ui/Skeleton';
@@ -13,12 +14,9 @@ const DonorManagement = () => {
   const [filterAvailable, setFilterAvailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Helper: compute availability from lastDonated
-  const computeAvailability = (donor) => {
-    if (!donor.lastDonated) return true;
-    const diffDays = Math.floor((new Date() - new Date(donor.lastDonated)) / (1000 * 60 * 60 * 24));
-    return diffDays >= 60;
-  };
+  // Profile modal state
+  const [profileModal, setProfileModal] = useState({ isOpen: false, donorId: null, donorName: '' });
+
   const { toast } = useToast();
 
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, data: null, action: null });
@@ -68,7 +66,8 @@ const DonorManagement = () => {
       if (action === 'DELETE') {
         setDonors(donors.filter(d => d._id !== data.id));
       } else {
-        setDonors(donors.map(d => d._id === data.id ? resData : d));
+        // Re-fetch to get updated priorities after date change
+        fetchDonors();
       }
     } catch (err) {
       toast.error(err.message || 'Action failed');
@@ -87,7 +86,8 @@ const DonorManagement = () => {
       });
 
       toast.success('Donor added successfully');
-      setDonors([data, ...donors]);
+      // Re-fetch to get recalculated priorities
+      fetchDonors();
       setIsAddModalOpen(false);
       setNewDonor({ firstName: '', lastName: '', phone: '', bloodGroup: 'A+', userType: 'student', rollNumber: '', address: '' });
     } catch (err) {
@@ -101,8 +101,7 @@ const DonorManagement = () => {
     const matchesSearch = (d.firstName + ' ' + d.lastName + ' ' + d.phone).toLowerCase().includes(search.toLowerCase());
     const matchesGroup = filterGroup === 'All' || d.bloodGroup === filterGroup;
     const matchesType = filterType === 'All' || d.userType === filterType;
-    const isActuallyAvailable = computeAvailability(d);
-    const matchesAvailable = !filterAvailable || isActuallyAvailable;
+    const matchesAvailable = !filterAvailable || d.status === 'Available';
     return matchesSearch && matchesGroup && matchesType && matchesAvailable;
   });
 
@@ -121,7 +120,7 @@ const DonorManagement = () => {
       <div className="p-8 border-b border-gray-50 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
         <div>
           <h2 className="text-3xl font-black text-gray-900 tracking-tight">Donor Directory</h2>
-          <p className="text-gray-500 font-medium text-sm mt-1">Institutional and local donor coordination.</p>
+          <p className="text-gray-500 font-medium text-sm mt-1">Institutional and local donor coordination. Click a name to view full profile.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap items-center gap-4 w-full xl:w-auto">
@@ -153,13 +152,13 @@ const DonorManagement = () => {
           </select>
           <label className="flex items-center gap-3 text-sm font-bold text-gray-600 cursor-pointer select-none bg-gray-50 px-4 py-3 rounded-2xl hover:bg-white transition-all">
             <input type="checkbox" checked={filterAvailable} onChange={e => setFilterAvailable(e.target.checked)} className="rounded-lg text-primary h-5 w-5 border-gray-300 focus:ring-primary" />
-            Active Only
+            Available Only
           </label>
         </div>
       </div>
 
       <div className="overflow-x-auto w-full relative">
-        <table className="w-full text-left border-collapse min-w-[1000px]">
+        <table className="w-full text-left border-collapse min-w-[1100px]">
           <thead>
             <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
               <th className="px-8 py-5">Donor Profile</th>
@@ -167,17 +166,34 @@ const DonorManagement = () => {
               <th className="px-4 py-5">Affiliation</th>
               <th className="px-4 py-5">Donation History</th>
               <th className="px-4 py-5 text-center">Status</th>
+              <th className="px-4 py-5 text-center">Priority</th>
               <th className="px-4 py-5 text-center">Trust Level</th>
               <th className="px-8 py-5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 text-sm">
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} columns={7} />)
+              Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} columns={8} />)
             ) : filteredDonors.map(donor => (
               <tr key={donor._id} className="hover:bg-primary/5 transition-all group/row">
                 <td className="px-8 py-6">
-                  <div className="font-bold text-gray-900 group-hover/row:text-primary transition-colors">{donor.firstName} {donor.lastName}</div>
+                  {/* Clickable donor name → opens profile modal */}
+                  <button
+                    onClick={() => setProfileModal({ isOpen: true, donorId: donor._id, donorName: `${donor.firstName} ${donor.lastName}` })}
+                    className="font-bold text-gray-900 group-hover/row:text-primary transition-colors hover:underline underline-offset-2 text-left"
+                  >
+                    {donor.firstName} {donor.lastName}
+                  </button>
+                  {/* Phase 2: Reliability badge */}
+                  {donor.reliabilityBadge && (
+                    <span className={`inline-block text-[9px] font-black px-2 py-0.5 rounded-full mt-1 ${
+                      donor.reliabilityBadge.includes('Reliable') ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
+                      donor.reliabilityBadge.includes('Low') ? 'bg-red-50 text-red-600 border border-red-100' :
+                      'bg-gray-100 text-gray-500'
+                    }`}>
+                      {donor.reliabilityBadge}
+                    </span>
+                  )}
                   <div className="text-gray-500 font-mono text-xs mt-1 tracking-tighter">{donor.phone}</div>
                   {donor.address && <div className="text-gray-400 text-[10px] mt-1 truncate max-w-[180px] font-medium" title={donor.address}>{donor.address}</div>}
                 </td>
@@ -203,19 +219,35 @@ const DonorManagement = () => {
                       const days = Math.floor((new Date() - new Date(donor.lastDonated)) / (1000 * 60 * 60 * 24));
                       return <span className={`text-[9px] font-black uppercase tracking-wider px-2 ${days < 60 ? 'text-red-500' : 'text-green-600'}`}>{days}d since donation</span>;
                     })()}
+                    <span className="text-[9px] font-black text-gray-400 px-2">
+                      {donor.totalDonations ?? 0} total donation{(donor.totalDonations ?? 0) !== 1 ? 's' : ''}
+                    </span>
                   </div>
                 </td>
                 <td className="px-4 py-6 text-center">
-                  {(() => {
-                    const available = computeAvailability(donor);
-                    return (
-                      <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${available ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                        }`}>
-                        {available ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                        {available ? 'Ready' : 'Resting'}
-                      </span>
-                    );
-                  })()}
+                  {/* Backend-computed status — no frontend recalculation */}
+                  <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${
+                    donor.status === 'Available'
+                      ? 'bg-green-50 text-green-700'
+                      : 'bg-red-50 text-red-700'
+                  }`}>
+                    {donor.status === 'Available'
+                      ? <CheckCircle className="w-3.5 h-3.5" />
+                      : <XCircle className="w-3.5 h-3.5" />
+                    }
+                    {donor.status || 'Unknown'}
+                  </span>
+                </td>
+                <td className="px-4 py-6 text-center">
+                  {/* Backend-computed priority rank */}
+                  {donor.priorityRank ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-100">
+                      <Award className="w-3.5 h-3.5" />
+                      #{donor.priorityRank}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Resting</span>
+                  )}
                 </td>
                 <td className="px-4 py-6 text-center">
                   <button
@@ -237,7 +269,7 @@ const DonorManagement = () => {
             ))}
             {!isLoading && filteredDonors.length === 0 && (
               <tr>
-                <td colSpan="7" className="p-20 text-center">
+                <td colSpan="8" className="p-20 text-center">
                   <div className="flex flex-col items-center gap-2 opacity-20">
                     <Search className="w-12 h-12" />
                     <p className="font-black uppercase tracking-widest text-xs">No Results Found</p>
@@ -256,6 +288,15 @@ const DonorManagement = () => {
         onConfirm={handleAction}
         onCancel={() => setConfirmModal({ isOpen: false, data: null, action: null })}
       />
+
+      {/* Donor Profile Modal */}
+      {profileModal.isOpen && (
+        <DonorProfileModal
+          donorId={profileModal.donorId}
+          donorName={profileModal.donorName}
+          onClose={() => setProfileModal({ isOpen: false, donorId: null, donorName: '' })}
+        />
+      )}
 
       {/* Add Donor Modal */}
       {isAddModalOpen && (

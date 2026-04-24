@@ -28,12 +28,14 @@ const requestSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'verified', 'fulfilled'],
+    // Phase 3: added 'expired' to the enum
+    enum: ['pending', 'verified', 'fulfilled', 'expired'],
     default: 'pending'
   }
 }, { timestamps: true });
 
 requestSchema.index({ status: 1 });
 requestSchema.index({ bloodGroup: 1 });
+requestSchema.index({ createdAt: 1 }); // For efficient expiry queries
 
 module.exports = mongoose.model('Request', requestSchema);

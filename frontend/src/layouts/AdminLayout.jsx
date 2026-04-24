@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Users, AlertCircle, LogOut, Shield, Menu, X, ShieldCheck, UserCheck } from 'lucide-react';
+import { Users, AlertCircle, LogOut, Shield, Menu, X, ShieldCheck, UserCheck, ClipboardList, Heart } from 'lucide-react';
 import { useToast } from '../components/ui/ToastProvider';
 import { fetchWithRetry, API_BASE } from '../api';
 import logo from '../components/image.png';
@@ -35,6 +35,8 @@ const AdminLayout = () => {
   const navLinks = [
     { name: 'Donors', path: '/admin/donors', icon: Users },
     { name: 'Members', path: '/admin/members', icon: UserCheck },
+    { name: 'Cases', path: '/admin/cases', icon: ClipboardList },
+    { name: 'Chronic', path: '/admin/chronic', icon: Heart },
     { name: 'Requests', path: '/admin/requests', icon: AlertCircle },
   ];
 

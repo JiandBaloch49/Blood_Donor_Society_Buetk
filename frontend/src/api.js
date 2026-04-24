@@ -1,4 +1,12 @@
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// In development, the Vite dev server proxies all /api requests to localhost:5000
+// (see vite.config.js → server.proxy). This means the browser never makes a
+// cross-origin request regardless of which network the machine is on.
+//
+// In production (built app served from the backend), the backend and frontend share
+// the same origin so no CORS is involved either.
+//
+// If you ever need to point at a remote server, set VITE_API_URL in .env.local
+export const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 /**
  * Enhanced fetch with retry logic and built-in error handling

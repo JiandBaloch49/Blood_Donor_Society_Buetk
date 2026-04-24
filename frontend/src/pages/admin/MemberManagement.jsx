@@ -8,6 +8,7 @@ import { TableRowSkeleton } from '../../components/ui/Skeleton';
 const MemberManagement = () => {
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [search, setSearch] = useState('');
   const { toast } = useToast();
 
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, data: null, action: null });
@@ -84,23 +85,41 @@ const MemberManagement = () => {
 
   return (
     <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden relative animate-in fade-in duration-700 min-h-[500px]">
-      <div className="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="flex items-center gap-4">
-           <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
-              <UserCheck className="w-7 h-7 text-primary" />
-           </div>
-           <div>
-             <h2 className="text-3xl font-black text-gray-900 tracking-tight">Society Members</h2>
-             <p className="text-gray-500 font-medium text-sm mt-1">Manage public contact profiles on the landing page.</p>
-           </div>
+      <div className="p-8 border-b border-gray-50">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+          <div className="flex items-center gap-4">
+             <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
+                <UserCheck className="w-7 h-7 text-primary" />
+             </div>
+             <div>
+               <div className="flex items-center gap-3">
+                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">Society Members</h2>
+                 <span className="text-xs font-black bg-gray-100 text-gray-500 px-3 py-1 rounded-full">{members.length}</span>
+               </div>
+               <p className="text-gray-500 font-medium text-sm mt-1">Manage public contact profiles on the landing page.</p>
+             </div>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            {/* Search */}
+            <div className="relative group flex-1 md:w-64">
+              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" />
+              <input
+                type="text"
+                placeholder="Search members..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-gray-50 border-transparent rounded-2xl text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all placeholder:font-medium"
+              />
+            </div>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-2xl text-sm font-black tracking-widest uppercase transition-all shadow-xl shadow-primary/20 active:scale-95 shrink-0"
+            >
+              <Plus className="w-5 h-5" /> Add
+            </button>
+          </div>
         </div>
-        
-        <button 
-          onClick={() => setIsAddModalOpen(true)} 
-          className="flex items-center gap-3 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-2xl text-sm font-black tracking-widest uppercase transition-all shadow-xl shadow-primary/20 active:scale-95"
-        >
-          <Plus className="w-5 h-5" /> Add Member
-        </button>
       </div>
 
       <div className="overflow-x-auto w-full relative">
@@ -117,7 +136,10 @@ const MemberManagement = () => {
           <tbody className="divide-y divide-gray-50 text-sm">
             {isLoading ? (
               Array.from({ length: 3 }).map((_, i) => <TableRowSkeleton key={i} columns={5} />)
-            ) : members.map(member => (
+            ) : members.filter(m => {
+                const q = search.toLowerCase();
+                return !q || m.name?.toLowerCase().includes(q) || m.role?.toLowerCase().includes(q) || m.phone?.includes(search);
+              }).map(member => (
               <tr key={member._id} className="hover:bg-primary/5 transition-all group/row">
                 <td className="px-8 py-6">
                    <div className="flex items-center gap-3">
@@ -158,12 +180,17 @@ const MemberManagement = () => {
                 </td>
               </tr>
             ))}
-            {!isLoading && members.length === 0 && (
+            {!isLoading && members.filter(m => {
+              const q = search.toLowerCase();
+              return !q || m.name?.toLowerCase().includes(q) || m.role?.toLowerCase().includes(q) || m.phone?.includes(search);
+            }).length === 0 && (
               <tr>
                 <td colSpan="5" className="p-20 text-center">
                   <div className="flex flex-col items-center gap-4 opacity-20">
                     <UserCheck className="w-14 h-14" />
-                    <p className="font-black uppercase tracking-widest text-xs">No Members Verified</p>
+                    <p className="font-black uppercase tracking-widest text-xs">
+                      {search ? `No members match "${search}"` : 'No Members Verified'}
+                    </p>
                   </div>
                 </td>
               </tr>

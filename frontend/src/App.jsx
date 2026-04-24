@@ -14,6 +14,9 @@ import DonorManagement from './pages/admin/DonorManagement';
 import RequestManagement from './pages/admin/RequestManagement';
 import AdminManagement from './pages/admin/AdminManagement';
 import MemberManagement from './pages/admin/MemberManagement';
+import CaseManagement from './pages/admin/CaseManagement';
+import ChronicManagement from './pages/admin/ChronicManagement';
+import InstallPWA from './components/InstallPWA';
 
 const RoleGuard = ({ requiredRole, children }) => {
   const role = localStorage.getItem('adminRole');
@@ -43,6 +46,8 @@ function App() {
              <Route path="donors" element={<DonorManagement />} />
              <Route path="members" element={<MemberManagement />} />
              <Route path="requests" element={<RequestManagement />} />
+             <Route path="cases" element={<CaseManagement />} />
+             <Route path="chronic" element={<ChronicManagement />} />
              
              {/* Master Admin Only */}
              <Route path="management" element={
@@ -55,6 +60,8 @@ function App() {
           {/* Fallback 404 */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        {/* PWA install banner — rendered globally */}
+        <InstallPWA />
       </Router>
     </ErrorBoundary>
   );
